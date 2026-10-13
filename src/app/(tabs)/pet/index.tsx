@@ -134,7 +134,7 @@ export default function MyPet() {
       </PetStage>
 
       <Card style={styles.gearPanel}>
-        <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ gap: 2 }}>
           <Text variant="caption" tone="muted">
             {preview ? 'PREVIEWING' : 'WEARING'}
           </Text>
@@ -143,17 +143,31 @@ export default function MyPet() {
             {item.blurb}
           </Text>
         </View>
-        <Button
-          label={status.kind === 'equipped' ? 'Equipped' : status.kind === 'owned' ? 'Equip' : status.kind === 'unlock' ? `Unlock for ${item.cost} coins` : 'Insufficient coins'}
-          variant={status.kind === 'locked' ? 'secondary' : 'primary'}
-          disabled={status.kind === 'equipped' || status.kind === 'locked'}
-          icon={status.kind === 'unlock' ? <CoinIcon size={16} color={colors.surface} /> : undefined}
-          onPress={act}
-        />
+        {/* Price on the left, a short action on the right: nothing here can overflow. */}
+        <View style={styles.gearRow}>
+          <View style={styles.price}>
+            {status.kind === 'unlock' || status.kind === 'locked' ? <CoinIcon size={16} /> : null}
+            <Text variant="smallStrong" tone={status.kind === 'locked' ? 'muted' : 'ink'}>
+              {status.kind === 'equipped' ? 'Wearing it now' : status.kind === 'owned' ? 'Unlocked' : `${item.cost} coins`}
+            </Text>
+            {status.kind === 'locked' ? (
+              <Text variant="small" tone="muted">
+                · {item.cost - state.progress.coins} more to go
+              </Text>
+            ) : null}
+          </View>
+          <Button
+            label={status.kind === 'equipped' ? 'Equipped' : status.kind === 'owned' ? 'Equip' : 'Unlock'}
+            variant={status.kind === 'locked' ? 'secondary' : 'primary'}
+            disabled={status.kind === 'equipped' || status.kind === 'locked'}
+            onPress={act}
+            accessibilityLabel={status.kind === 'unlock' ? `Unlock ${item.name} for ${item.cost} coins` : status.kind === 'locked' ? `Unlock ${item.name}. Needs ${item.cost - state.progress.coins} more coins` : undefined}
+          />
+        </View>
       </Card>
       {status.kind === 'locked' ? (
         <Text variant="small" tone="muted" style={{ marginTop: -spacing.sm }}>
-          You need {item.cost - state.progress.coins} more {item.cost - state.progress.coins === 1 ? 'coin' : 'coins'}. Each daily goal earns 5.
+          Each daily goal earns 5 coins; all three in a day earn 20.
         </Text>
       ) : null}
 
@@ -204,7 +218,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  gearPanel: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  gearPanel: { gap: spacing.md },
+  gearRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  price: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, flexWrap: 'wrap' },
   tools: { flexDirection: 'row', gap: spacing.md },
   tool: { flex: 1 },
 });

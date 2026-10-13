@@ -19,11 +19,12 @@ export interface GearGridProps {
   onPreview: (gear: GearId) => void;
 }
 
+/** Tile label stays short (a word or the price) so it fits a third of the screen on any phone. */
 export function gearStatus(gear: GearId, owned: GearId[], equipped: GearId, coins: number, cost: number) {
   if (equipped === gear) return { label: 'Equipped', kind: 'equipped' as const };
   if (owned.includes(gear)) return { label: 'Owned', kind: 'owned' as const };
-  if (coins >= cost) return { label: `Unlock for ${cost}`, kind: 'unlock' as const };
-  return { label: `${cost - coins} more coins`, kind: 'locked' as const };
+  if (coins >= cost) return { label: `${cost}`, kind: 'unlock' as const };
+  return { label: `${cost}`, kind: 'locked' as const };
 }
 
 export function GearGrid({ petId, stage, path, owned, equipped, previewing, coins, onPreview }: GearGridProps) {
@@ -38,7 +39,7 @@ export function GearGrid({ petId, stage, path, owned, equipped, previewing, coin
             key={item.id}
             accessibilityRole="radio"
             accessibilityState={{ selected, checked: selected }}
-            accessibilityLabel={`${item.name}. ${item.cost === 0 ? 'Free' : `${item.cost} coins`}. ${status.label}.`}
+            accessibilityLabel={`${item.name}. ${item.cost === 0 ? 'Free' : `${item.cost} coins`}. ${status.kind === 'locked' ? `${item.cost - coins} more coins needed` : status.kind === 'unlock' ? 'You can unlock this' : status.label}.`}
             accessibilityHint="Previews this gear on your pet"
             onPress={() => onPreview(item.id)}
             style={({ pressed }) => [styles.card, selected && styles.selected, pressed && { opacity: 0.85 }]}
@@ -49,8 +50,8 @@ export function GearGrid({ petId, stage, path, owned, equipped, previewing, coin
             </Text>
             <View style={styles.statusRow}>
               {status.kind === 'equipped' ? <Check size={13} color={colors.success} strokeWidth={3} /> : null}
-              {status.kind === 'locked' ? <LockIcon size={12} /> : null}
-              {status.kind === 'unlock' ? <CoinIcon size={13} /> : null}
+              {status.kind === 'locked' || status.kind === 'unlock' ? <CoinIcon size={13} /> : null}
+              {status.kind === 'locked' ? <LockIcon size={11} /> : null}
               <Text variant="caption" tone={status.kind === 'equipped' ? 'sage' : status.kind === 'locked' ? 'muted' : 'ink'} numberOfLines={1}>
                 {status.label.toUpperCase()}
               </Text>
