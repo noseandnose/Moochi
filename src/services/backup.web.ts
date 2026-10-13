@@ -27,12 +27,12 @@ export async function importBackup(): Promise<ImportResult> {
       if (!file) return resolve({ kind: 'canceled' });
       try {
         const data = JSON.parse(await file.text());
-        if (data?.format !== 'youchi-backup' || !data.state) return resolve({ kind: 'invalid', reason: 'That file is not a YOUCHI backup.' });
+        if (data?.format !== 'youchi-backup' || !data.state) return resolve({ kind: 'invalid', reason: 'That file is not a YOUchi backup.' });
         const outcome = loadState(data.state);
         if (outcome.kind !== 'ok') return resolve({ kind: 'invalid', reason: 'The backup could not be read.' });
         resolve({ kind: 'ok', state: { ...outcome.state, selfies: [] }, photos: 0 });
       } catch {
-        resolve({ kind: 'invalid', reason: 'That file is not a YOUCHI backup.' });
+        resolve({ kind: 'invalid', reason: 'That file is not a YOUchi backup.' });
       }
     };
     input.click();

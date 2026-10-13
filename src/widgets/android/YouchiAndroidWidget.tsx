@@ -61,7 +61,7 @@ export function YouchiAndroidWidget({ data, width }: { data: AndroidWidgetData |
   if (!data) {
     return (
       <FlexWidget style={{ height: 'match_parent', width: 'match_parent', backgroundColor: '#FAF9F6', borderRadius: 20, padding: 14, justifyContent: 'center' }} clickAction="OPEN_APP">
-        <TextWidget text="YOUCHI" style={{ fontSize: 16, fontWeight: 'bold', color: ink }} />
+        <TextWidget text="YOUchi" style={{ fontSize: 16, fontWeight: 'bold', color: ink }} />
         <TextWidget text="Open the app to start." style={{ fontSize: 12, color: muted }} />
       </FlexWidget>
     );

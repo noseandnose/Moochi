@@ -37,7 +37,7 @@ let generation = 0;
 let lastApplied = '';
 
 /**
- * Replaces every scheduled YOUCHI notification with the given plan. The plan
+ * Replaces every scheduled YOUchi notification with the given plan. The plan
  * is computed from the current game state so each notification says what
  * the pet actually needs when it fires; a stale one is cancelled by the next
  * sync rather than left to fire with old text.

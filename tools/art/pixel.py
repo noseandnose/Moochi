@@ -1,5 +1,5 @@
 """
-Tiny pixel-art DSL used to build every YOUCHI sprite deterministically.
+Tiny pixel-art DSL used to build every YOUchi sprite deterministically.
 
 Coordinates are given in a 64x64 "unit" space (1 unit = 2 px) so the
 original web silhouettes can be reused, while all rasterisation happens on a

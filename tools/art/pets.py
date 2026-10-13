@@ -1,5 +1,5 @@
 """
-YOUCHI's cast: five original pocket pets in a chunky Tamagotchi-style pixel
+YOUchi's cast: five original pocket pets in a chunky Tamagotchi-style pixel
 look. Big heads, simple rounded bodies, clean silhouettes, a small palette.
 
 Each pet is built from parts in a 64x64 unit space (1 unit = 2 px) with the

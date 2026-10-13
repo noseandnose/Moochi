@@ -47,7 +47,7 @@ export async function exportBackup(state: GameState): Promise<'shared' | 'unavai
   }
   file.write(JSON.stringify(payload));
   if (!(await Sharing.isAvailableAsync())) return 'unavailable';
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Save your YOUCHI backup' });
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Save your YOUchi backup' });
   return 'shared';
 }
 
@@ -61,14 +61,14 @@ export async function importBackup(): Promise<ImportResult> {
   try {
     parsed = JSON.parse(new File(picked.assets[0].uri).textSync());
   } catch {
-    return { kind: 'invalid', reason: 'That file is not a YOUCHI backup.' };
+    return { kind: 'invalid', reason: 'That file is not a YOUchi backup.' };
   }
   const data = parsed as Partial<BackupFile> | null;
   if (!data || typeof data !== 'object' || data.format !== BACKUP_FORMAT || !data.state) {
-    return { kind: 'invalid', reason: 'That file is not a YOUCHI backup.' };
+    return { kind: 'invalid', reason: 'That file is not a YOUchi backup.' };
   }
   if (typeof data.schemaVersion === 'number' && data.schemaVersion > SCHEMA_VERSION) {
-    return { kind: 'invalid', reason: 'This backup was made by a newer version of YOUCHI. Update the app, then try again.' };
+    return { kind: 'invalid', reason: 'This backup was made by a newer version of YOUchi. Update the app, then try again.' };
   }
   const outcome = loadState(data.state);
   if (outcome.kind !== 'ok') return { kind: 'invalid', reason: 'The backup could not be read.' };

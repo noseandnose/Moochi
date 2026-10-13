@@ -16,7 +16,7 @@ export default function Welcome() {
   return (
     <Screen contentContainerStyle={styles.content}>
       <View style={styles.brand}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" accessibilityLabel="YOUCHI" />
+        <Image source={logo} style={styles.logo} resizeMode="contain" accessibilityLabel="YOUchi" />
         <Text variant="small" tone="muted">
           Build habits. Level up.
         </Text>

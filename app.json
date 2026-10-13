@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "YOUCHI",
+    "name": "YOUchi",
     "slug": "youchi",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,8 +13,8 @@
       "bundleIdentifier": "com.youchi.habits",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSHealthShareUsageDescription": "YOUCHI reads your steps and workouts to complete your daily movement goal automatically.",
-        "NSHealthUpdateUsageDescription": "YOUCHI does not write health data."
+        "NSHealthShareUsageDescription": "YOUchi reads your steps and workouts to complete your daily movement goal automatically.",
+        "NSHealthUpdateUsageDescription": "YOUchi does not write health data."
       }
     },
     "android": {
@@ -49,8 +49,8 @@
       [
         "expo-media-library",
         {
-          "savePhotosPermission": "YOUCHI saves your pet card to your photos when you ask it to.",
-          "photosPermission": "YOUCHI only adds pet cards you choose to save.",
+          "savePhotosPermission": "YOUchi saves your pet card to your photos when you ask it to.",
+          "photosPermission": "YOUchi only adds pet cards you choose to save.",
           "granularPermissions": [
             "photo"
           ]
@@ -60,15 +60,15 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "YOUCHI uses the camera for your daily progress selfie. Photos stay on this device.",
-          "photosPermission": "YOUCHI lets you pick a progress selfie from your photos. Photos stay on this device."
+          "cameraPermission": "YOUchi uses the camera for your daily progress selfie. Photos stay on this device.",
+          "photosPermission": "YOUchi lets you pick a progress selfie from your photos. Photos stay on this device."
         }
       ],
       [
         "react-native-health",
         {
-          "healthSharePermission": "YOUCHI reads your steps and workouts to complete your daily movement goal automatically.",
-          "healthUpdatePermission": "YOUCHI does not write health data."
+          "healthSharePermission": "YOUchi reads your steps and workouts to complete your daily movement goal automatically.",
+          "healthUpdatePermission": "YOUchi does not write health data."
         }
       ],
       "react-native-health-connect",
@@ -87,7 +87,7 @@
           "widgets": [
             {
               "name": "YouchiWidget",
-              "displayName": "YOUCHI",
+              "displayName": "YOUchi",
               "description": "Your pet and today's goals at a glance.",
               "ios": {
                 "supportedFamilies": [
@@ -106,7 +106,7 @@
           "widgets": [
             {
               "name": "YouchiWidget",
-              "label": "YOUCHI",
+              "label": "YOUchi",
               "description": "Your pet and today's goals at a glance.",
               "minWidth": "180dp",
               "minHeight": "110dp",

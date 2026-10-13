@@ -2,7 +2,7 @@ import { ANDROID_WIDGET_NAME } from '@/widgets/android/constants';
 
 export const canPinWidget = true;
 
-/** Asks the launcher to add the YOUCHI widget. Resolves false when the launcher declines or the module is missing (Expo Go). */
+/** Asks the launcher to add the YOUchi widget. Resolves false when the launcher declines or the module is missing (Expo Go). */
 export async function pinWidget(): Promise<boolean> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

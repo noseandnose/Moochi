@@ -62,7 +62,7 @@ export function BackupSettings({ onRestored }: { onRestored?: () => void }) {
   return (
     <Card style={{ gap: spacing.md }}>
       <Text variant="small" tone="soft">
-        Save a copy of your pet, progress and photos as a file, and restore it on a new phone. Keep it somewhere safe such as Files, Drive or iCloud; YOUCHI has no cloud of its own.
+        Save a copy of your pet, progress and photos as a file, and restore it on a new phone. Keep it somewhere safe such as Files, Drive or iCloud; YOUchi has no cloud of its own.
       </Text>
       <View style={styles.row}>
         <Button label="Export backup" variant="secondary" style={styles.half} icon={<Upload size={18} />} loading={busy === 'export'} onPress={doExport} />

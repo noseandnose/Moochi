@@ -27,7 +27,7 @@ export default function SharePet() {
   const stageName = STAGES.find((s) => s.id === stage)?.name ?? '';
   const path = getVisualPath(state);
   const pathName = PATH_BY_ID[path].name;
-  const message = `Meet ${state.profile.petName}, my YOUCHI. Level ${level} ${stageName}. Build habits. Level up. ${SITE_URL}`;
+  const message = `Meet ${state.profile.petName}, my YOUchi. Level ${level} ${stageName}. Build habits. Level up. ${SITE_URL}`;
 
   const renderToFile = useCallback(async (): Promise<string> => {
     const image = canvas.current?.makeImageSnapshot();
@@ -48,7 +48,7 @@ export default function SharePet() {
     try {
       if (Platform.OS !== 'web' && (await Sharing.isAvailableAsync())) {
         const uri = await renderToFile();
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share your YOUCHI card' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share your YOUchi card' });
         haptic('success');
       } else {
         await Share.share({ message });

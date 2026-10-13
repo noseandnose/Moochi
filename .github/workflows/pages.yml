@@ -1,6 +1,6 @@
 name: Website (GitHub Pages)
 
-# Builds the web version of YOUCHI and publishes it to GitHub Pages on every
+# Builds the web version of YOUchi and publishes it to GitHub Pages on every
 # push to main. One-time setup in the repository: Settings → Pages → Build and
 # deployment → Source: "GitHub Actions".
 #

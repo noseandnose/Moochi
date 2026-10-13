@@ -1,7 +1,7 @@
 # Store listing copy
 
 ## Name
-YOUCHI
+YOUchi
 
 ## Subtitle (App Store, 30 chars) / Short description (Play, 80 chars)
 Build habits. Level up.
@@ -19,7 +19,7 @@ Drink water, move, and eat well. Each goal you complete earns XP and coins for a
 - A home screen widget with your pet and today's count.
 - Works offline. No account, no ads, no subscriptions. Everything stays on your phone, with a backup file you control.
 
-Missed a day? Nothing is lost. YOUCHI never punishes you; it just waits.
+Missed a day? Nothing is lost. YOUchi never punishes you; it just waits.
 
 ## Keywords (App Store)
 habit tracker, water tracker, pixel pet, daily goals, steps, streak free, self care, virtual pet, routine

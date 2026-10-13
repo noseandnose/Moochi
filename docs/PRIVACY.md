@@ -1,21 +1,21 @@
-# YOUCHI Privacy Policy
+# YOUchi Privacy Policy
 
 _Last updated: 13 October 2026_
 
-YOUCHI is a habit game that runs entirely on your phone. This policy explains what the app stores and what it never does.
+YOUchi is a habit game that runs entirely on your phone. This policy explains what the app stores and what it never does.
 
-## What YOUCHI stores on your device
+## What YOUchi stores on your device
 
 - Your pet choice and name, your daily goals and settings.
 - Your daily check-ins: water amounts, movement, eating, bonus completions, and the XP, coins and gear you earn.
 - Progress photos you choose to take, saved in the app's private storage.
 - Steps and workout minutes for the current day, only if you turn on health sync.
 
-All of this stays in the app's private storage on your device. YOUCHI has no account system, no servers and no analytics. Nothing is uploaded.
+All of this stays in the app's private storage on your device. YOUchi has no account system, no servers and no analytics. Nothing is uploaded.
 
 ## Health data
 
-If you turn on health sync, YOUCHI reads today's step count and workout sessions from Apple Health (iOS) or Health Connect (Android) to complete your movement goal automatically. YOUCHI only reads this data, never writes it, and does not store it beyond the current day. Health data is never used for advertising, never shared with third parties and never leaves your device. You can turn health sync off at any time in Settings, and revoke access in the Health app or Health Connect.
+If you turn on health sync, YOUchi reads today's step count and workout sessions from Apple Health (iOS) or Health Connect (Android) to complete your movement goal automatically. YOUchi only reads this data, never writes it, and does not store it beyond the current day. Health data is never used for advertising, never shared with third parties and never leaves your device. You can turn health sync off at any time in Settings, and revoke access in the Health app or Health Connect.
 
 ## Photos and camera
 
@@ -35,11 +35,11 @@ The daily reminder is a local notification scheduled on your device. No push ser
 
 ## Children
 
-YOUCHI does not collect personal information from anyone, including children.
+YOUchi does not collect personal information from anyone, including children.
 
 ## Deleting your data
 
-Use Settings → Reset all progress, or uninstall the app. Both remove all YOUCHI data from the device.
+Use Settings → Reset all progress, or uninstall the app. Both remove all YOUchi data from the device.
 
 ## Changes
 

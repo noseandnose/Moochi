@@ -2,7 +2,7 @@ import { STREAK, dateKey, formatWater, getCompletedCount, getStreakInfo, getWate
 
 import type { PlannedReminder } from './notifications';
 
-const TITLE = 'YOUCHI';
+const TITLE = 'YOUchi';
 
 /**
  * Decides which local notifications should exist right now, from the game

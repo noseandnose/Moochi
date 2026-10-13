@@ -1,8 +1,8 @@
-# YOUCHI
+# YOUchi
 
 **Build habits. Level up.**
 
-YOUCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), add up to three bonuses (a progress selfie, the daily challenge, your own goal), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Movement can complete itself from Apple Health or Health Connect, and a home screen widget keeps the pet and today's count in view. Everything runs offline on the device: no account, no backend, no ads.
+YOUchi is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), add up to three bonuses (a progress selfie, the daily challenge, your own goal), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Movement can complete itself from Apple Health or Health Connect, and a home screen widget keeps the pet and today's count in view. Everything runs offline on the device: no account, no backend, no ads.
 
 ## The cast
 
@@ -189,12 +189,12 @@ The website builds and publishes itself to GitHub Pages from `main` (`.github/wo
 ## Limitations
 
 - Sound effects are not implemented; the settings preference exists in the data model but there is no audio. Haptics and reduce-motion are implemented.
-- Health sync and widgets are untested on devices (see Verification). `react-native-health` is a legacy bridge module that runs through the New Architecture interop layer; if a device build reports issues there, `@kingstinct/react-native-healthkit` is the drop-in alternative behind the same `src/services/health.ts` interface. HealthKit never reports a read denial, so a user who declines sharing sees "connected" with zero steps; the app says where to look (Health → Sharing → Apps → YOUCHI) when the first read is empty.
+- Health sync and widgets are untested on devices (see Verification). `react-native-health` is a legacy bridge module that runs through the New Architecture interop layer; if a device build reports issues there, `@kingstinct/react-native-healthkit` is the drop-in alternative behind the same `src/services/health.ts` interface. HealthKit never reports a read denial, so a user who declines sharing sees "connected" with zero steps; the app says where to look (Health → Sharing → Apps → YOUchi) when the first read is empty.
 - Backups embed every progress photo as base64 in one JSON file. Photos are downscaled to 1,200 px on the long edge at capture (a few hundred kilobytes each), so a year of daily photos is roughly 100 MB; a multi-year archive would need a streamed or zipped export, which is not built.
 - The widget image omits animation and shows the happy frame; it refreshes when the app runs, plus the periodic system refresh (30 minutes on Android).
 - Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, and all five pets share one rendering style and 128×128 cells.
 - The web preview is for development only. It needs `npm run web:setup` (copies CanvasKit), and saving to Photos is unavailable there.
-- Progress from the YOUCHI website does not transfer to the app; no import flow was built.
+- Progress from the YOUchi website does not transfer to the app; no import flow was built.
 - There is no cloud sync. Deleting the app deletes progress unless a backup file was exported first.
 - Android reminders use inexact alarms (no `SCHEDULE_EXACT_ALARM`), so a nudge can arrive a few minutes late on Android 12+.
 
