@@ -121,7 +121,7 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 **Three bonus tiles** sit under the daily goals in a swipeable row (Today). Each earns 20 XP and 4 coins once per local day and never affects the evolution path:
 
-1. **Progress selfie**: take or pick one photo a day. Photos are copied into the app's private documents directory; only the file name is stored in game state. The Progress screen shows a first-vs-latest comparison and a grid of all photos, each deletable. Selfies are never part of the share card.
+1. **Progress photo**: take or pick one upper-body photo a day (3:4 portrait crop, head to waist, same spot each time). Photos are copied into the app's private documents directory; only the file name is stored in game state. The Progress screen shows a first-vs-latest comparison and a grid of all photos, each deletable. Selfies are never part of the share card.
 2. **Daily challenge**: the rotating challenge, as before.
 3. **Your goal**: a goal in your own words (set from the tile or in Settings). Clearing the text hides the tile's check-in; an earned reward stays.
 

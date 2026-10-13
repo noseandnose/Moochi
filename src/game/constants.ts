@@ -10,7 +10,7 @@ export const REWARDS = {
 } as const;
 
 export const BONUSES: { id: BonusId; title: string; blurb: string }[] = [
-  { id: 'selfie', title: 'Progress selfie', blurb: 'One photo a day. Watch yourself change.' },
+  { id: 'selfie', title: 'Progress photo', blurb: 'Upper body, same spot, once a day. Watch yourself change.' },
   { id: 'bonus', title: 'Daily challenge', blurb: 'A small extra that changes every day.' },
   { id: 'custom', title: 'Your goal', blurb: 'A daily goal in your own words.' },
 ];

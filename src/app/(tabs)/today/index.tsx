@@ -117,10 +117,10 @@ export default function Today() {
   const bonusTiles: BonusTile[] = [
     {
       id: 'selfie',
-      title: 'Progress selfie',
-      detail: 'One photo a day. Watch yourself change.',
+      title: 'Progress photo',
+      detail: 'Upper body, same spot, once a day.',
       done: state.today.selfieDone,
-      actionLabel: 'Take selfie',
+      actionLabel: 'Take photo',
       onAction: selfie.start,
       onOpen: () => router.push('/(tabs)/today/progress'),
       imageUri: todaySelfie ? selfieUri(todaySelfie.file) : undefined,

@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   cardDone: { backgroundColor: colors.surfaceMuted, borderColor: colors.surfaceMuted, shadowOpacity: 0, elevation: 0 },
   body: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   iconTile: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.bonusSoft, alignItems: 'center', justifyContent: 'center' },
-  thumb: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.surfaceSunken },
+  thumb: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.surfaceSunken, resizeMode: 'cover' },
   text: { flex: 1, gap: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   title: { flexShrink: 1 },

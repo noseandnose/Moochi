@@ -55,9 +55,9 @@ export default function Progress() {
             No photos yet
           </Text>
           <Text variant="small" tone="soft" align="center">
-            Take one selfie a day. Over weeks they add up to a record you can actually see. Each one earns 20 XP and 4 coins.
+            One upper-body photo a day, head to waist, in the same spot and light. Over weeks they add up to a record you can actually see. Each one earns 20 XP and 4 coins.
           </Text>
-          <Button label="Take today's selfie" icon={<Camera size={18} color={colors.surface} />} loading={selfie.busy} onPress={selfie.start} />
+          <Button label="Take today's photo" icon={<Camera size={18} color={colors.surface} />} loading={selfie.busy} onPress={selfie.start} />
         </Card>
       ) : (
         <>
@@ -78,7 +78,7 @@ export default function Progress() {
             </Card>
           ) : null}
           <Button
-            label={state.today.selfieDone ? "Retake today's selfie" : "Take today's selfie"}
+            label={state.today.selfieDone ? "Retake today's photo" : "Take today's photo"}
             variant={state.today.selfieDone ? 'secondary' : 'primary'}
             full
             icon={<Camera size={18} color={state.today.selfieDone ? colors.ink : colors.surface} />}
@@ -89,7 +89,7 @@ export default function Progress() {
           <View style={styles.grid}>
             {[...selfies].reverse().map((s) => (
               <View key={s.date} style={{ width: tile }}>
-                <Image source={{ uri: selfieUri(s.file) }} style={[styles.thumb, { width: tile, height: tile }]} accessibilityLabel={`Photo from ${formatDate(s.date)}`} />
+                <Image source={{ uri: selfieUri(s.file) }} style={[styles.thumb, { width: tile, height: Math.round((tile * 4) / 3) }]} accessibilityLabel={`Photo from ${formatDate(s.date)}`} />
                 <View style={styles.thumbRow}>
                   <Text variant="caption" tone="muted" numberOfLines={1} style={{ flex: 1 }}>
                     {formatDate(s.date).toUpperCase()}
@@ -104,7 +104,7 @@ export default function Progress() {
         </>
       )}
       <Text variant="small" tone="muted" align="center">
-        Photos are stored only on this device and are never part of the share card.
+        Tip: same spot, same distance, same time of day makes the comparison honest. Photos are stored only on this device and are never part of the share card.
       </Text>
     </Screen>
   );
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: colors.bonusSoft, alignItems: 'center', justifyContent: 'center' },
   compare: { flexDirection: 'row', gap: spacing.md },
   compareCol: { flex: 1, gap: 6 },
-  compareImage: { width: '100%', aspectRatio: 1, borderRadius: radius.md, backgroundColor: colors.surfaceSunken },
+  compareImage: { width: '100%', aspectRatio: 3 / 4, borderRadius: radius.md, backgroundColor: colors.surfaceSunken },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   thumb: { borderRadius: radius.sm, backgroundColor: colors.surfaceSunken },
   thumbRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },

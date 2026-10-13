@@ -28,7 +28,8 @@ export function useSelfie() {
           toast(source === 'camera' ? 'Allow camera access to take a selfie.' : 'Allow photo access to pick a selfie.', 'danger');
           return;
         }
-        const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [1, 1], cameraType: ImagePicker.CameraType.front };
+        // Portrait 3:4 crop so the frame holds head to waist, not just the face.
+        const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [3, 4], cameraType: ImagePicker.CameraType.front };
         const result = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
         if (result.canceled || !result.assets?.[0]?.uri) return;
         const file = await saveSelfie(result.assets[0].uri, state.today.date);
@@ -60,7 +61,7 @@ export function useSelfie() {
       capture('library');
       return;
     }
-    Alert.alert('Progress selfie', 'Photos stay on this device and never leave it.', [
+    Alert.alert('Progress photo', 'Frame your upper body, head to waist, standing in the same spot each time. Photos stay on this device.', [
       { text: 'Take photo', onPress: () => capture('camera') },
       { text: 'Choose from library', onPress: () => capture('library') },
       { text: 'Cancel', style: 'cancel' },
