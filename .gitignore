@@ -47,3 +47,5 @@ public/canvaskit.wasm
 
 # Python
 __pycache__/
+public/privacy.html
+public/support.html

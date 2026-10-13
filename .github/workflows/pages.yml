@@ -39,7 +39,7 @@ jobs:
           if [ "$BASE" = "/" ]; then BASE=""; fi
           echo "EXPO_WEB_BASE_URL=$BASE" >> "$GITHUB_ENV"
           echo "Base path: '$BASE'"
-      - name: Export the web app
+      - name: Export the web app (also renders privacy.html and support.html)
         run: npm run web:build
       - name: Make the export Pages-friendly
         run: |
