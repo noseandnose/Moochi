@@ -1,0 +1,174 @@
+import React, { useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import {
+  DEFAULTS,
+  displayAmount,
+  formatWater,
+  parseAmount,
+  toMl,
+  unitLabel,
+  type Gender,
+  type WaterUnit,
+} from '@/game';
+import { Button, Card, Field, Segmented, Text } from '@/ui/components';
+import { spacing } from '@/ui/theme';
+
+export interface ProfileValues {
+  petName: string;
+  gender: Gender;
+  waterUnit: WaterUnit;
+  waterTargetMl: number;
+  movementMinutes: number;
+  eatingGoal: string;
+}
+
+export interface ProfileFormProps {
+  initial: ProfileValues;
+  submitLabel: string;
+  onSubmit: (values: ProfileValues) => void;
+  /** Hide the pet name field (My pet has its own rename). */
+  showName?: boolean;
+  compact?: boolean;
+}
+
+export function defaultTargetFor(gender: Gender): number {
+  if (gender === 'female') return DEFAULTS.waterTargetFemaleMl;
+  if (gender === 'male') return DEFAULTS.waterTargetMaleMl;
+  return DEFAULTS.waterTargetUnspecifiedMl;
+}
+
+function targetToText(ml: number, unit: WaterUnit): string {
+  const v = displayAmount(ml, unit, 'target');
+  return unit === 'oz' ? String(v) : String(Math.round(v));
+}
+
+export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, compact }: ProfileFormProps) {
+  const [petName, setPetName] = useState(initial.petName);
+  const [gender, setGender] = useState<Gender>(initial.gender);
+  const [unit, setUnit] = useState<WaterUnit>(initial.waterUnit);
+  const [targetMl, setTargetMl] = useState(initial.waterTargetMl);
+  const [targetText, setTargetText] = useState(targetToText(initial.waterTargetMl, initial.waterUnit));
+  const [minutesText, setMinutesText] = useState(String(initial.movementMinutes));
+  const [eatingGoal, setEatingGoal] = useState(initial.eatingGoal);
+  const [touched, setTouched] = useState(false);
+
+  const targetError = useMemo(() => {
+    const n = parseAmount(targetText);
+    if (n === null) return 'Enter a water target greater than zero.';
+    const ml = toMl(n, unit);
+    if (ml < DEFAULTS.minWaterTargetMl) return `Minimum is ${formatWater(DEFAULTS.minWaterTargetMl, unit, 'target')}.`;
+    if (ml > DEFAULTS.maxWaterTargetMl) return `Maximum is ${formatWater(DEFAULTS.maxWaterTargetMl, unit, 'target')}.`;
+    return null;
+  }, [targetText, unit]);
+
+  const minutesError = useMemo(() => {
+    const n = Number(minutesText);
+    if (!/^\d+$/.test(minutesText.trim()) || !Number.isFinite(n)) return 'Enter whole minutes.';
+    if (n < DEFAULTS.minMovementMinutes || n > DEFAULTS.maxMovementMinutes) {
+      return `Choose between ${DEFAULTS.minMovementMinutes} and ${DEFAULTS.maxMovementMinutes} minutes.`;
+    }
+    return null;
+  }, [minutesText]);
+
+  const onGender = (g: Gender) => {
+    setGender(g);
+    // Editable app defaults, not medical advice. Only applied when the user changes gender.
+    const ml = defaultTargetFor(g);
+    setTargetMl(ml);
+    setTargetText(targetToText(ml, unit));
+  };
+
+  const onUnit = (u: WaterUnit) => {
+    // Presentation only: the stored millilitre target does not change.
+    const n = parseAmount(targetText);
+    const ml = n !== null ? toMl(n, unit) : targetMl;
+    setTargetMl(ml);
+    setUnit(u);
+    setTargetText(targetToText(ml, u));
+  };
+
+  const onTargetBlur = () => {
+    const n = parseAmount(targetText);
+    if (n !== null) {
+      const ml = Math.min(DEFAULTS.maxWaterTargetMl, Math.max(DEFAULTS.minWaterTargetMl, toMl(n, unit)));
+      setTargetMl(ml);
+    }
+  };
+
+  const submit = () => {
+    setTouched(true);
+    const n = parseAmount(targetText);
+    if (targetError || minutesError || n === null) return;
+    onSubmit({
+      petName: petName.trim(),
+      gender,
+      waterUnit: unit,
+      waterTargetMl: toMl(n, unit),
+      movementMinutes: Number(minutesText),
+      eatingGoal: eatingGoal.trim(),
+    });
+  };
+
+  return (
+    <View style={styles.form}>
+      {showName ? (
+        <Field label="Pet name" value={petName} onChangeText={setPetName} maxLength={DEFAULTS.maxPetNameLength} autoCapitalize="words" autoCorrect={false} returnKeyType="done" />
+      ) : null}
+      <Segmented<Gender>
+        label="Gender"
+        value={gender}
+        onChange={onGender}
+        options={[
+          { value: 'female', label: 'Female' },
+          { value: 'male', label: 'Male' },
+          { value: 'unspecified', label: 'Prefer not to say' },
+        ]}
+      />
+      <Text variant="small" tone="muted" style={styles.note}>
+        Gender only sets a starting water target ({formatWater(DEFAULTS.waterTargetFemaleMl, unit, 'target')} or{' '}
+        {formatWater(DEFAULTS.waterTargetMaleMl, unit, 'target')}). It is an editable default, not medical advice, and it changes nothing else.
+      </Text>
+      <Segmented<WaterUnit>
+        label="Water units"
+        value={unit}
+        onChange={onUnit}
+        options={[
+          { value: 'ml', label: 'Millilitres (ml)' },
+          { value: 'oz', label: 'US fl oz' },
+        ]}
+      />
+      <Field
+        label="Daily water target"
+        value={targetText}
+        onChangeText={setTargetText}
+        onBlur={onTargetBlur}
+        keyboardType="decimal-pad"
+        inputMode="decimal"
+        suffix={unitLabel(unit)}
+        error={touched ? targetError : null}
+        hint={!touched && !compact ? 'Change it any time in Settings.' : undefined}
+      />
+      <Field
+        label="Movement each day"
+        value={minutesText}
+        onChangeText={setMinutesText}
+        keyboardType="number-pad"
+        inputMode="numeric"
+        suffix="minutes"
+        error={touched ? minutesError : null}
+      />
+      <Field label="Eating goal" value={eatingGoal} onChangeText={setEatingGoal} maxLength={DEFAULTS.maxEatingGoalLength} placeholder={DEFAULTS.eatingGoal} returnKeyType="done" />
+      <Button label={submitLabel} size="lg" full onPress={submit} style={{ marginTop: spacing.sm }} />
+    </View>
+  );
+}
+
+export function ProfileCard({ children }: { children: React.ReactNode }) {
+  return <Card>{children}</Card>;
+}
+
+const styles = StyleSheet.create({
+  form: { gap: spacing.lg },
+  note: { marginTop: -8 },
+});
