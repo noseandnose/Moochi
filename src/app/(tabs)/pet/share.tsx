@@ -12,7 +12,7 @@ import { useGameState } from '@/state/GameProvider';
 import { Button, Card, Screen, Text, useToast } from '@/ui/components';
 import { colors, spacing } from '@/ui/theme';
 
-const SITE_URL = 'https://mochi-pocket-companion.waynegluckmann.chatgpt.site';
+const SITE_URL = 'https://noseandnose.github.io/youchi/';
 
 export default function SharePet() {
   const state = useGameState();
