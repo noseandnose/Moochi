@@ -9,7 +9,7 @@ import { createWidget, type WidgetEnvironment } from 'expo-widgets';
  * Only SwiftUI components from @expo/ui are allowed here, nothing from
  * module scope.
  */
-export type MochiWidgetProps = {
+export type YouchiWidgetProps = {
   petName: string;
   stageName: string;
   completed: number;
@@ -22,7 +22,7 @@ export type MochiWidgetProps = {
   eatingDone: boolean;
 };
 
-const MochiWidget = (props: MochiWidgetProps, environment: WidgetEnvironment) => {
+const YouchiWidget = (props: YouchiWidgetProps, environment: WidgetEnvironment) => {
   'widget';
   const ink = '#20231F';
   const muted = '#767B72';
@@ -31,7 +31,7 @@ const MochiWidget = (props: MochiWidgetProps, environment: WidgetEnvironment) =>
   const surface = '#FFFEFA';
   if (environment.widgetFamily === 'systemSmall') {
     return (
-      <VStack modifiers={[widgetURL('mochi://today')]}>
+      <VStack modifiers={[widgetURL('youchi://today')]}>
         <Image uiImage={props.petImage} modifiers={[frame({ width: 120, height: 120 })]} />
       </VStack>
     );
@@ -56,17 +56,17 @@ const MochiWidget = (props: MochiWidgetProps, environment: WidgetEnvironment) =>
   );
   return (
     <HStack spacing={12}>
-      <Link destination="mochi://today">
+      <Link destination="youchi://today">
         <Image uiImage={props.petImage} modifiers={[frame({ width: 110, height: 110 })]} />
       </Link>
       <VStack alignment="leading" spacing={6}>
         <Text modifiers={[font({ size: 12 }), foregroundStyle(muted)]}>{props.statusLine}</Text>
-        {goal('Water', 'drop.fill', props.waterDone, 'mochi://today/water')}
-        {goal('Move', 'figure.walk', props.movementDone, 'mochi://today/goal/movement')}
-        {goal('Eat', 'fork.knife', props.eatingDone, 'mochi://today/goal/eating')}
+        {goal('Water', 'drop.fill', props.waterDone, 'youchi://today/water')}
+        {goal('Move', 'figure.walk', props.movementDone, 'youchi://today/goal/movement')}
+        {goal('Eat', 'fork.knife', props.eatingDone, 'youchi://today/goal/eating')}
       </VStack>
     </HStack>
   );
 };
 
-export default createWidget<MochiWidgetProps>('MochiWidget', MochiWidget);
+export default createWidget<YouchiWidgetProps>('YouchiWidget', YouchiWidget);

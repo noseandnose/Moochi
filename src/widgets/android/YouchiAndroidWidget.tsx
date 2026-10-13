@@ -56,12 +56,12 @@ function GoalButton({ icon, label, done, uri }: { icon: keyof typeof ICONS; labe
  * Android home screen widget. Narrow: the pet alone. Wide: the pet, a line
  * that says what to do next, and three buttons that deep-link into the app.
  */
-export function MochiAndroidWidget({ data, width }: { data: AndroidWidgetData | null; width: number }) {
+export function YouchiAndroidWidget({ data, width }: { data: AndroidWidgetData | null; width: number }) {
   const wide = width >= 220;
   if (!data) {
     return (
       <FlexWidget style={{ height: 'match_parent', width: 'match_parent', backgroundColor: '#FAF9F6', borderRadius: 20, padding: 14, justifyContent: 'center' }} clickAction="OPEN_APP">
-        <TextWidget text="MOCHI" style={{ fontSize: 16, fontWeight: 'bold', color: ink }} />
+        <TextWidget text="YOUCHI" style={{ fontSize: 16, fontWeight: 'bold', color: ink }} />
         <TextWidget text="Open the app to start." style={{ fontSize: 12, color: muted }} />
       </FlexWidget>
     );
@@ -82,9 +82,9 @@ export function MochiAndroidWidget({ data, width }: { data: AndroidWidgetData | 
       </FlexWidget>
       <FlexWidget style={{ flex: 1, flexDirection: 'column', marginLeft: 10 }}>
         <TextWidget text={data.statusLine} style={{ fontSize: 12, color: muted, marginBottom: 6 }} maxLines={2} />
-        <GoalButton icon="water" label="Water" done={data.waterDone} uri="mochi://today/water" />
-        <GoalButton icon="move" label="Move" done={data.movementDone} uri="mochi://today/goal/movement" />
-        <GoalButton icon="eat" label="Eat" done={data.eatingDone} uri="mochi://today/goal/eating" />
+        <GoalButton icon="water" label="Water" done={data.waterDone} uri="youchi://today/water" />
+        <GoalButton icon="move" label="Move" done={data.movementDone} uri="youchi://today/goal/movement" />
+        <GoalButton icon="eat" label="Eat" done={data.eatingDone} uri="youchi://today/goal/eating" />
       </FlexWidget>
     </FlexWidget>
   );

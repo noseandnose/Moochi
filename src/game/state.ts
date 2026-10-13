@@ -97,7 +97,7 @@ export function loadState(raw: unknown, now: number = Date.now()): LoadOutcome {
   let data = { ...(raw as Record<string, unknown>) };
   const startVersion = typeof data.schemaVersion === 'number' ? data.schemaVersion : 0;
   if (startVersion > SCHEMA_VERSION) {
-    // Written by a newer MOCHI: loading it here would silently drop what we do not understand.
+    // Written by a newer YOUCHI: loading it here would silently drop what we do not understand.
     return { kind: 'corrupt', state: createInitialState(), reason: 'newer schema' };
   }
   let migrated = false;

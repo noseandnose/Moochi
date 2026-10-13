@@ -8,11 +8,11 @@ import { colors, spacing } from '@/ui/theme';
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: 'What stays on your phone',
-    body: 'Your pet, goals, daily check-ins, XP, coins, gear, progress photos and settings. MOCHI has no accounts, no servers and no analytics. Nothing is uploaded.',
+    body: 'Your pet, goals, daily check-ins, XP, coins, gear, progress photos and settings. YOUCHI has no accounts, no servers and no analytics. Nothing is uploaded.',
   },
   {
     title: 'Health data',
-    body: 'With health sync on, MOCHI reads today’s steps and workouts from Apple Health or Health Connect to complete your movement goal. It only reads, never writes, keeps nothing beyond today, and never shares it. Turn it off any time in Settings.',
+    body: 'With health sync on, YOUCHI reads today’s steps and workouts from Apple Health or Health Connect to complete your movement goal. It only reads, never writes, keeps nothing beyond today, and never shares it. Turn it off any time in Settings.',
   },
   {
     title: 'Photos',

@@ -30,14 +30,14 @@ export interface PlannedReminder {
   url?: string;
 }
 
-const IDENTIFIER: Record<ReminderId, string> = { evening: 'mochi-daily-reminder', water: 'mochi-water-nudge', streak: 'mochi-streak-warning' };
+const IDENTIFIER: Record<ReminderId, string> = { evening: 'youchi-daily-reminder', water: 'youchi-water-nudge', streak: 'youchi-streak-warning' };
 
 let chain: Promise<void> = Promise.resolve();
 let generation = 0;
 let lastApplied = '';
 
 /**
- * Replaces every scheduled MOCHI notification with the given plan. The plan
+ * Replaces every scheduled YOUCHI notification with the given plan. The plan
  * is computed from the current game state so each notification says what
  * the pet actually needs when it fires; a stale one is cancelled by the next
  * sync rather than left to fire with old text.

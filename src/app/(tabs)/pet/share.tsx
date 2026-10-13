@@ -27,13 +27,13 @@ export default function SharePet() {
   const stageName = STAGES.find((s) => s.id === stage)?.name ?? '';
   const path = getVisualPath(state);
   const pathName = PATH_BY_ID[path].name;
-  const message = `Meet ${state.profile.petName}, my MOCHI. Level ${level} ${stageName}. Build habits. Level up. ${SITE_URL}`;
+  const message = `Meet ${state.profile.petName}, my YOUCHI. Level ${level} ${stageName}. Build habits. Level up. ${SITE_URL}`;
 
   const renderToFile = useCallback(async (): Promise<string> => {
     const image = canvas.current?.makeImageSnapshot();
     if (!image) throw new Error('Card is still preparing. Try again in a moment.');
     const base64 = image.encodeToBase64();
-    const file = new File(Paths.cache, `mochi-${state.profile.petId}-${Date.now()}.png`);
+    const file = new File(Paths.cache, `youchi-${state.profile.petId}-${Date.now()}.png`);
     try {
       file.create({ overwrite: true, intermediates: true });
     } catch {
@@ -48,7 +48,7 @@ export default function SharePet() {
     try {
       if (Platform.OS !== 'web' && (await Sharing.isAvailableAsync())) {
         const uri = await renderToFile();
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share your MOCHI card' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share your YOUCHI card' });
         haptic('success');
       } else {
         await Share.share({ message });

@@ -3,7 +3,7 @@ import React from 'react';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 
 import { ANDROID_WIDGET_KEY, ANDROID_WIDGET_NAME } from './constants';
-import { MochiAndroidWidget, type AndroidWidgetData } from './MochiAndroidWidget';
+import { YouchiAndroidWidget, type AndroidWidgetData } from './YouchiAndroidWidget';
 
 export { ANDROID_WIDGET_KEY, ANDROID_WIDGET_NAME };
 
@@ -25,7 +25,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case 'WIDGET_RESIZED':
     case 'WIDGET_CLICK': {
       const data = await readData();
-      props.renderWidget(<MochiAndroidWidget data={data} width={props.widgetInfo.width} />);
+      props.renderWidget(<YouchiAndroidWidget data={data} width={props.widgetInfo.width} />);
       break;
     }
     default:

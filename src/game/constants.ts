@@ -126,7 +126,7 @@ export const CHALLENGES = [
 ];
 
 export const DEFAULTS = {
-  petName: 'Mochi',
+  petName: 'Youchi',
   waterTargetFemaleMl: 2000,
   waterTargetMaleMl: 3000,
   waterTargetUnspecifiedMl: 2500,

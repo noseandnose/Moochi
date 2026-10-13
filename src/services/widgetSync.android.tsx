@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 
 import type { GameState } from '@/game';
-import type { AndroidWidgetData } from '@/widgets/android/MochiAndroidWidget';
+import type { AndroidWidgetData } from '@/widgets/android/YouchiAndroidWidget';
 import { ANDROID_WIDGET_KEY, ANDROID_WIDGET_NAME } from '@/widgets/android/constants';
 
 import { renderPetPng } from './widgetImage';
@@ -35,10 +35,10 @@ export async function syncWidget(state: GameState): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { requestWidgetUpdate } = require('react-native-android-widget') as typeof import('react-native-android-widget');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { MochiAndroidWidget } = require('@/widgets/android/MochiAndroidWidget') as typeof import('@/widgets/android/MochiAndroidWidget');
+    const { YouchiAndroidWidget } = require('@/widgets/android/YouchiAndroidWidget') as typeof import('@/widgets/android/YouchiAndroidWidget');
     await requestWidgetUpdate({
       widgetName: ANDROID_WIDGET_NAME,
-      renderWidget: (info) => <MochiAndroidWidget data={data} width={info.width} />,
+      renderWidget: (info) => <YouchiAndroidWidget data={data} width={info.width} />,
       widgetNotFound: () => undefined,
     });
   } catch {

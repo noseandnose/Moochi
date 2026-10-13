@@ -6,7 +6,7 @@ import { SCHEMA_VERSION, loadState, type GameState, SELFIE_FILE } from '@/game';
 
 import { selfieUri } from './selfies';
 
-export const BACKUP_FORMAT = 'mochi-backup';
+export const BACKUP_FORMAT = 'youchi-backup';
 export const BACKUP_VERSION = 1;
 
 export interface BackupFile {
@@ -39,7 +39,7 @@ export async function exportBackup(state: GameState): Promise<'shared' | 'unavai
     photos,
   };
   const stamp = new Date().toISOString().slice(0, 10);
-  const file = new File(Paths.cache, `mochi-backup-${stamp}.json`);
+  const file = new File(Paths.cache, `youchi-backup-${stamp}.json`);
   try {
     file.create({ overwrite: true, intermediates: true });
   } catch {
@@ -47,7 +47,7 @@ export async function exportBackup(state: GameState): Promise<'shared' | 'unavai
   }
   file.write(JSON.stringify(payload));
   if (!(await Sharing.isAvailableAsync())) return 'unavailable';
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Save your MOCHI backup' });
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Save your YOUCHI backup' });
   return 'shared';
 }
 
@@ -61,14 +61,14 @@ export async function importBackup(): Promise<ImportResult> {
   try {
     parsed = JSON.parse(new File(picked.assets[0].uri).textSync());
   } catch {
-    return { kind: 'invalid', reason: 'That file is not a MOCHI backup.' };
+    return { kind: 'invalid', reason: 'That file is not a YOUCHI backup.' };
   }
   const data = parsed as Partial<BackupFile> | null;
   if (!data || typeof data !== 'object' || data.format !== BACKUP_FORMAT || !data.state) {
-    return { kind: 'invalid', reason: 'That file is not a MOCHI backup.' };
+    return { kind: 'invalid', reason: 'That file is not a YOUCHI backup.' };
   }
   if (typeof data.schemaVersion === 'number' && data.schemaVersion > SCHEMA_VERSION) {
-    return { kind: 'invalid', reason: 'This backup was made by a newer version of MOCHI. Update the app, then try again.' };
+    return { kind: 'invalid', reason: 'This backup was made by a newer version of YOUCHI. Update the app, then try again.' };
   }
   const outcome = loadState(data.state);
   if (outcome.kind !== 'ok') return { kind: 'invalid', reason: 'The backup could not be read.' };

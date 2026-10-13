@@ -96,7 +96,7 @@ export const ShareCard = forwardRef<CanvasRef, ShareCardProps>(function ShareCar
   const tagline = centered('Build habits. Level up.', fonts.line);
   const footer = centered('What will you unlock next?', fonts.meta);
   const clip = useMemo(() => rect(spriteX, spriteY, spriteSize, spriteSize), [spriteX]);
-  const logoW = 99;
+  const logoW = 120;
   const logoH = 21;
 
   return (

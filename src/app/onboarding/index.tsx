@@ -16,7 +16,7 @@ export default function Welcome() {
   return (
     <Screen contentContainerStyle={styles.content}>
       <View style={styles.brand}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" accessibilityLabel="MOCHI" />
+        <Image source={logo} style={styles.logo} resizeMode="contain" accessibilityLabel="YOUCHI" />
         <Text variant="small" tone="muted">
           Build habits. Level up.
         </Text>
@@ -62,7 +62,7 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1 },
   brand: { gap: 2, marginBottom: spacing.sm },
-  logo: { width: 132, height: 28 },
+  logo: { width: 160, height: 28 },
   hero: {
     height: 170,
     borderRadius: radius.xl,

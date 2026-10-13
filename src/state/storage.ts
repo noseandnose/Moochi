@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { GameState } from '@/game';
 
-export const STORAGE_KEY = 'mochi.game.v1';
-export const BACKUP_PREFIX = 'mochi.game.backup.';
+export const STORAGE_KEY = 'youchi.game.v1';
+export const BACKUP_PREFIX = 'youchi.game.backup.';
 
 /** Reads the raw persisted payload. Returns `undefined` when nothing is stored. */
 export async function readRaw(): Promise<{ raw: unknown; parseError?: string } | undefined> {

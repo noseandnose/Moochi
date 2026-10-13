@@ -12,14 +12,14 @@ import { colors, spacing } from '@/ui/theme';
 const IOS_STEPS = [
   'Touch and hold an empty spot on your home screen until the apps wiggle.',
   'Tap the + (or Edit, then Add Widget) in the top corner.',
-  'Search for MOCHI and pick the small widget (just your pet) or the medium one (pet plus the three goal buttons).',
+  'Search for YOUCHI and pick the small widget (just your pet) or the medium one (pet plus the three goal buttons).',
   'Tap Add Widget, then Done.',
 ];
 
 const ANDROID_STEPS = [
   'Touch and hold an empty spot on your home screen.',
   'Tap Widgets.',
-  'Find MOCHI and drag the widget onto the screen. Resize it wider to show the three goal buttons.',
+  'Find YOUCHI and drag the widget onto the screen. Resize it wider to show the three goal buttons.',
 ];
 
 export default function WidgetHowTo() {

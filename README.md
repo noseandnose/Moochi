@@ -1,8 +1,8 @@
-# MOCHI
+# YOUCHI
 
 **Build habits. Level up.**
 
-MOCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), add up to three bonuses (a progress selfie, the daily challenge, your own goal), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Movement can complete itself from Apple Health or Health Connect, and a home screen widget keeps the pet and today's count in view. Everything runs offline on the device: no account, no backend, no ads.
+YOUCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), add up to three bonuses (a progress selfie, the daily challenge, your own goal), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Movement can complete itself from Apple Health or Health Connect, and a home screen widget keeps the pet and today's count in view. Everything runs offline on the device: no account, no backend, no ads.
 
 ## The cast
 
@@ -112,7 +112,7 @@ npm run web               # browser preview (copies CanvasKit to public/ first)
 
 ## Producing iOS and Android builds
 
-The project is configured for EAS Build (`bundleIdentifier` / `package`: `com.mochi.habits`).
+The project is configured for EAS Build (`bundleIdentifier` / `package`: `com.youchi.habits`).
 
 ```bash
 npm install -g eas-cli
@@ -142,7 +142,7 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 **Pet moods**: after hatching the pet always shows one of five states, chosen in priority order: asleep (no interaction for 36 hours; tapping wakes it), thirsty (water not logged), hungry (eating not checked in), lazy (movement not done), content (all three done). Each needy mood has its own expression and a status badge that reuses the goal icons (drop, fork and knife, dumbbell) so the cue is readable at widget size. A sleeping pet is actually in bed: it sinks into a cushion under a blanket with its eyes shut and its gear off, with bold Z's beside it. The Today stage shows the mood with a short caption, and the widget uses the same mood so a glance at the home screen says what to do next.
 
-**Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/MochiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The small widget shows only the pet in its current mood. The medium widget adds a one-line nudge ("Tofu is thirsty. Log some water.") and three buttons, Water, Move and Eat, each marked Done or Log, that deep-link straight to the water log or the goal screen (`mochi://today/water`, `mochi://today/goal/movement`, `mochi://today/goal/eating`). The widget contains no amounts, photos or health data. Widgets need a development or store build.
+**Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/YouchiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The small widget shows only the pet in its current mood. The medium widget adds a one-line nudge ("Tofu is thirsty. Log some water.") and three buttons, Water, Move and Eat, each marked Done or Log, that deep-link straight to the water log or the goal screen (`youchi://today/water`, `youchi://today/goal/movement`, `youchi://today/goal/eating`). The widget contains no amounts, photos or health data. Widgets need a development or store build.
 
 ## Launch features
 
@@ -173,7 +173,7 @@ Automated, run in this repository:
 - `npm test`: 90 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, pet mood priority and the asleep timer, streaks (partial days count, undo keeps the day, freeze earning every seven days, freezes spent in order across a gap, cap, purchase, persistence, projection before the day has rolled over, a lost today date), resilience (a clock moved backwards never wipes a day, newer-schema data is refused, future frozen days, impossible dates, unsafe photo names and future activity are dropped, touching the pet wakes it), reminder planning (goal-aware evening text, water nudge with amount left, streak warning folding, tomorrow fallbacks when a goal is finished early, nudges off), onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
-- `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `MochiWidget` Swift file, the app group and the HealthKit entitlement.
+- `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `YouchiWidget` Swift file, the app group and the HealthKit entitlement.
 - Browser preview driven by Playwright at 390×844, 375×667 and 320×568: fresh install through onboarding for the pets, water quick-add and custom entry in ml and fl oz, undo, unit switching without drift, goal completion returning to Today with the reward banner, the egg hatch, undo from the detail screen, gear preview without spending, locked and insufficient states, the first purchase and equip, evolution previews for every pet, pet switching with preserved progress, share card generation, Journey history and achievements, settings validation and save, reduce-motion and haptic toggles, reset confirmation, and persistence across a page reload.
 
 Not run (no simulator or device available in the build environment):
@@ -189,12 +189,12 @@ The website builds and publishes itself to GitHub Pages from `main` (`.github/wo
 ## Limitations
 
 - Sound effects are not implemented; the settings preference exists in the data model but there is no audio. Haptics and reduce-motion are implemented.
-- Health sync and widgets are untested on devices (see Verification). `react-native-health` is a legacy bridge module that runs through the New Architecture interop layer; if a device build reports issues there, `@kingstinct/react-native-healthkit` is the drop-in alternative behind the same `src/services/health.ts` interface. HealthKit never reports a read denial, so a user who declines sharing sees "connected" with zero steps; the app says where to look (Health → Sharing → Apps → MOCHI) when the first read is empty.
+- Health sync and widgets are untested on devices (see Verification). `react-native-health` is a legacy bridge module that runs through the New Architecture interop layer; if a device build reports issues there, `@kingstinct/react-native-healthkit` is the drop-in alternative behind the same `src/services/health.ts` interface. HealthKit never reports a read denial, so a user who declines sharing sees "connected" with zero steps; the app says where to look (Health → Sharing → Apps → YOUCHI) when the first read is empty.
 - Backups embed every progress photo as base64 in one JSON file. Photos are downscaled to 1,200 px on the long edge at capture (a few hundred kilobytes each), so a year of daily photos is roughly 100 MB; a multi-year archive would need a streamed or zipped export, which is not built.
 - The widget image omits animation and shows the happy frame; it refreshes when the app runs, plus the periodic system refresh (30 minutes on Android).
 - Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, and all five pets share one rendering style and 128×128 cells.
 - The web preview is for development only. It needs `npm run web:setup` (copies CanvasKit), and saving to Photos is unavailable there.
-- Progress from the MOCHI website does not transfer to the app; no import flow was built.
+- Progress from the YOUCHI website does not transfer to the app; no import flow was built.
 - There is no cloud sync. Deleting the app deletes progress unless a backup file was exported first.
 - Android reminders use inexact alarms (no `SCHEDULE_EXACT_ALARM`), so a nudge can arrive a few minutes late on Android 12+.
 

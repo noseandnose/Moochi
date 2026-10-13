@@ -1,4 +1,4 @@
-# Deploying MOCHI
+# Deploying YOUCHI
 
 A step-by-step runbook from this repository to the App Store and Google Play. Everything builds in the cloud with EAS, so no Mac is required for iOS. Budget two to three weeks end to end: the builds take an hour, the device test pass a day or two, and the store reviews and Google's closed-testing rule take the rest.
 
@@ -32,8 +32,8 @@ This creates the EAS project and writes `extra.eas.projectId` into `app.json`. C
 
 Decisions already made in `app.json`:
 
-- Bundle identifier and package: `com.mochi.habits`. Change both before the first build if you want a different reverse-domain id; they cannot change after the first store submission.
-- Widget extension bundle id `com.mochi.habits.widgets` and App Group `group.com.mochi.habits`. The `expo-widgets` plugin registers the extension with EAS, so EAS generates the extension's provisioning profile and entitlements for you.
+- Bundle identifier and package: `com.youchi.habits`. Change both before the first build if you want a different reverse-domain id; they cannot change after the first store submission.
+- Widget extension bundle id `com.youchi.habits.widgets` and App Group `group.com.youchi.habits`. The `expo-widgets` plugin registers the extension with EAS, so EAS generates the extension's provisioning profile and entitlements for you.
 - iPad support is off (`supportsTablet: false`). The layout is phone-only; turning it on would require iPad screenshots and an iPad review pass.
 - HealthKit entitlement and usage strings, Health Connect permissions, notification icon and channel, camera and photo strings are all declared.
 
@@ -91,9 +91,9 @@ Fix anything you find, push, and rebuild. Development builds only need a rebuild
 
 ## Phase 3: store records and the privacy policy (one hour)
 
-1. **Privacy policy URL.** Both stores need a public URL. Easiest: enable GitHub Pages for this repository (Settings → Pages → deploy from the `main` branch, folder `/docs`) and use the resulting `.../PRIVACY` link, or paste `docs/PRIVACY.md` onto the existing MOCHI site.
-2. **App Store Connect**: https://appstoreconnect.apple.com → Apps → New App. Platform iOS, name MOCHI, primary language, bundle id `com.mochi.habits` (it appears in the list once the Phase 2 build registered it), SKU `mochi-ios`. Note the numeric Apple ID shown under General Information; that is `ascAppId`.
-3. **Google Play Console**: Create app → name MOCHI, app (not game), free. Package name is taken from the first upload.
+1. **Privacy policy URL.** Both stores need a public URL. Easiest: enable GitHub Pages for this repository (Settings → Pages → deploy from the `main` branch, folder `/docs`) and use the resulting `.../PRIVACY` link, or paste `docs/PRIVACY.md` onto the existing YOUCHI site.
+2. **App Store Connect**: https://appstoreconnect.apple.com → Apps → New App. Platform iOS, name YOUCHI, primary language, bundle id `com.youchi.habits` (it appears in the list once the Phase 2 build registered it), SKU `youchi-ios`. Note the numeric Apple ID shown under General Information; that is `ascAppId`.
+3. **Google Play Console**: Create app → name YOUCHI, app (not game), free. Package name is taken from the first upload.
 4. Fill both listings from `docs/STORE_LISTING.md`: description, subtitle / short description, keywords, category Health & Fitness, age rating questionnaire (no objectionable content, no user-generated content, no ads), contact email, privacy policy URL.
 5. **Privacy declarations**: App Store privacy label "Data Not Collected". Play Data safety: no data collected, no data shared, data is not encrypted in transit because nothing is transmitted, users can request deletion by resetting or uninstalling.
 6. **Health declarations**:
@@ -145,7 +145,7 @@ Health Connect: until the Health apps declaration from Phase 3 is approved, the 
 
 - iOS: release manually from App Store Connect once approved; turn on **phased release** so the rollout spreads over seven days and you can pause it.
 - Android: use a **staged rollout** (start at 20%) on the production track.
-- Pin the store links on the MOCHI website, and switch the share-card link in `src/app/(tabs)/pet/share.tsx` from the website to the store links in the next update.
+- Pin the store links on the YOUCHI website, and switch the share-card link in `src/app/(tabs)/pet/share.tsx` from the website to the store links in the next update.
 
 ## Phase 7: after launch
 
@@ -169,7 +169,7 @@ Health Connect: until the Health apps declaration from Phase 3 is approved, the 
 
 ## The website
 
-The same code runs in the browser and can be hosted as a static site, which gives people a way to try MOCHI without installing anything and doubles as a landing page for the store links.
+The same code runs in the browser and can be hosted as a static site, which gives people a way to try YOUCHI without installing anything and doubles as a landing page for the store links.
 
 What works on the web: onboarding, the three goals, water log, bonuses with a photo uploaded from the device, the pet, gear, evolution paths, journey, streaks, settings, backup export and import (as a downloaded JSON without photos), and the share link. Progress persists in the browser's local storage for that browser only. What does not: the home screen widget, Apple Health / Health Connect, notifications, the camera (the picker offers the photo library), and saving the share card to Photos. The app hides or disables each of those on the web.
 
@@ -200,4 +200,4 @@ The workflow builds with the site's sub-path as the base URL, copies the app she
 - **Netlify** and **Cloudflare Pages**: build command `npm run web:build`, publish directory `dist`; the `public/_redirects` file in the repo (`/* /index.html 200`) is included in the export.
 - **Vercel**: framework "Other", build command `npm run web:build`, output `dist`, plus a `vercel.json` with `{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}`.
 
-Put it on the MOCHI domain you already own and link the App Store and Google Play badges from the welcome screen once the apps are live.
+Put it on the YOUCHI domain you already own and link the App Store and Google Play badges from the welcome screen once the apps are live.

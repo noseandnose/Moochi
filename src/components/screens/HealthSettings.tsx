@@ -53,7 +53,7 @@ export function HealthSettings() {
       }
       haptic('success');
       // HealthKit never reports a read denial, so say where to look if nothing comes through.
-      toast(read && read.steps === 0 && read.workoutMinutes === 0 && Platform.OS === 'ios' ? 'Connected. If steps stay at 0, check Health → Sharing → Apps → MOCHI.' : `${healthProviderName} connected.`);
+      toast(read && read.steps === 0 && read.workoutMinutes === 0 && Platform.OS === 'ios' ? 'Connected. If steps stay at 0, check Health → Sharing → Apps → YOUCHI.' : `${healthProviderName} connected.`);
     } finally {
       setBusy(false);
     }

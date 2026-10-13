@@ -14,6 +14,8 @@ FONT = {
     "C": [".XXX.", "X...X", "X....", "X....", "X....", "X...X", ".XXX."],
     "H": ["X...X", "X...X", "X...X", "XXXXX", "X...X", "X...X", "X...X"],
     "I": ["XXXXX", "..X..", "..X..", "..X..", "..X..", "..X..", "XXXXX"],
+    "Y": ["X...X", "X...X", ".X.X.", "..X..", "..X..", "..X..", "..X.."],
+    "U": ["X...X", "X...X", "X...X", "X...X", "X...X", "X...X", ".XXX."],
 }
 
 
@@ -42,8 +44,8 @@ def build(assets: Path):
     brand = assets / "brand"
     brand.mkdir(parents=True, exist_ok=True)
     # Logo at 8x (crisp when displayed at any multiple of 8px/cell or smaller).
-    upscale(logo("MOCHI"), 8).save(brand / "logo.png")
-    upscale(logo("MOCHI", (250, 249, 246, 255)), 8).save(brand / "logo-light.png")
+    upscale(logo("YOUCHI"), 8).save(brand / "logo.png")
+    upscale(logo("YOUCHI", (250, 249, 246, 255)), 8).save(brand / "logo-light.png")
 
     # The whole cast side by side (README / social).
     step = 96
@@ -80,7 +82,7 @@ def build(assets: Path):
     mono.alpha_composite(white, ((1024 - 616) // 2, (1024 - 616) // 2 + 10))
     mono.save(images / "android-icon-monochrome.png")
     # Splash icon: the logo.
-    upscale(logo("MOCHI"), 24).save(images / "splash-icon.png")
+    upscale(logo("YOUCHI"), 24).save(images / "splash-icon.png")
     # Favicon.
     icon.resize((64, 64), Image.LANCZOS).save(images / "favicon.png")
     print("brand assets written")

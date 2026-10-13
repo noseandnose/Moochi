@@ -61,7 +61,7 @@ export default function Settings() {
             Saved data could not be read
           </Text>
           <Text variant="small" tone="soft">
-            MOCHI started with defaults and kept a backup copy of the unreadable data on this device.
+            YOUCHI started with defaults and kept a backup copy of the unreadable data on this device.
           </Text>
         </Card>
       ) : null}
@@ -123,10 +123,10 @@ export default function Settings() {
       <SectionHeading title="Your data" />
       <Card tone="muted" elevated={false} style={{ gap: spacing.sm }}>
         <Text variant="small" tone="soft">
-          MOCHI stores everything on this device only: your pet, goals, XP, coins, gear, water log, progress selfies and daily history. There is no account, no cloud sync and nothing leaves your phone. The home screen widget reads only your pet, level and today’s goal count.
+          YOUCHI stores everything on this device only: your pet, goals, XP, coins, gear, water log, progress selfies and daily history. There is no account, no cloud sync and nothing leaves your phone. The home screen widget reads only your pet, level and today’s goal count.
         </Text>
         <Text variant="small" tone="soft">
-          Deleting the app removes this data. Progress from the MOCHI website does not transfer automatically.
+          Deleting the app removes this data. Progress from the YOUCHI website does not transfer automatically.
         </Text>
         <Text variant="small" tone="soft">
           Water targets are editable starting points, not medical advice.
@@ -142,7 +142,7 @@ export default function Settings() {
         <Button label="Reset all progress" variant="danger" full onPress={confirmReset} />
       </Card>
       <Text variant="small" tone="muted" align="center">
-        MOCHI · Build habits. Level up.
+        YOUCHI · Build habits. Level up.
       </Text>
     </Screen>
   );

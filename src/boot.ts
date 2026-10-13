@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 if (Platform.OS === 'ios') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('./widgets/MochiWidget');
+    require('./widgets/YouchiWidget');
   } catch {
     // Not available in this build.
   }

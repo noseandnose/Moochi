@@ -1,12 +1,12 @@
 import { File, Paths } from 'expo-file-system';
 
 import type { GameState } from '@/game';
-import type { MochiWidgetProps } from '@/widgets/MochiWidget';
+import type { YouchiWidgetProps } from '@/widgets/YouchiWidget';
 
 import { renderPetPng } from './widgetImage';
 import { buildWidgetSnapshot } from './widgetSnapshot';
 
-type WidgetModule = { widgetsDirectory: string; widget: { updateSnapshot: (props: MochiWidgetProps) => void } };
+type WidgetModule = { widgetsDirectory: string; widget: { updateSnapshot: (props: YouchiWidgetProps) => void } };
 let loaded: WidgetModule | null | undefined;
 
 /** expo-widgets needs a development build; in Expo Go the native module is missing. */
@@ -16,7 +16,7 @@ function loadWidget(): WidgetModule | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { widgetsDirectory } = require('expo-widgets') as { widgetsDirectory: string };
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const widget = (require('@/widgets/MochiWidget') as { default: WidgetModule['widget'] }).default;
+    const widget = (require('@/widgets/YouchiWidget') as { default: WidgetModule['widget'] }).default;
     loaded = widgetsDirectory ? { widgetsDirectory, widget } : null;
   } catch {
     loaded = null;
@@ -54,7 +54,7 @@ export async function syncWidget(state: GameState): Promise<void> {
       lastImageKey = imageKey;
     }
   }
-  const props: MochiWidgetProps = {
+  const props: YouchiWidgetProps = {
     petName: snapshot.petName,
     stageName: snapshot.stageName,
     completed: snapshot.completed,
