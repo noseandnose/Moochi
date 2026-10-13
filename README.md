@@ -184,7 +184,7 @@ Not run (no simulator or device available in the build environment):
 
 ## Deploying
 
-See `docs/DEPLOY.md` for the full runbook: accounts, EAS development builds, the on-device test checklist, store records, privacy and health declarations, screenshots, production builds, TestFlight and Play testing tracks (including Google's 12-tester closed-testing rule), and release day.
+The website builds and publishes itself to GitHub Pages from `main` (`.github/workflows/pages.yml`); enable Pages with source "GitHub Actions" once. See `docs/DEPLOY.md` for the full runbook: accounts, EAS development builds, the on-device test checklist, store records, privacy and health declarations, screenshots, production builds, TestFlight and Play testing tracks (including Google's 12-tester closed-testing rule), and release day.
 
 ## Limitations
 

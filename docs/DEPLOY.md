@@ -181,11 +181,23 @@ npm run web:build
 
 This copies the CanvasKit runtime into `public/` and exports a static site to `dist/`: one `index.html`, one JavaScript bundle (about 5 MB uncompressed, under 1 MB over the wire with compression), the pixel assets, and `canvaskit.wasm` (8 MB, about 3 MB compressed). The first visit takes a few seconds on mobile data; later visits are cached.
 
-Host `dist/` on any static host that can rewrite unknown paths to `index.html` (the app is a single-page app, so `/journey` must serve `index.html`):
+### Hosting on GitHub Pages (built in)
 
-- **Netlify**: drag `dist/` onto the dashboard, or connect the repo with build command `npm run web:build` and publish directory `dist`. Add a `public/_redirects` file containing `/* /index.html 200` so deep links work.
-- **Vercel**: import the repo, framework "Other", build command `npm run web:build`, output `dist`, and a `vercel.json` with `{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}`.
-- **Cloudflare Pages**: same build settings; add `public/_redirects` with `/* /index.html 200`.
-- **GitHub Pages**: works only with a copy of `index.html` saved as `404.html` (Pages serves it for unknown paths), and the site must live at the domain root, not a `/repo` sub-path.
+The repository ships a workflow, `.github/workflows/pages.yml`, that builds the site and publishes it to GitHub Pages on every push to `main`. One-time setup:
+
+1. Merge the branch into `main`.
+2. In the repository on GitHub: Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+3. Push to `main` (or run the "Website (GitHub Pages)" workflow from the Actions tab). The site appears at `https://<owner>.github.io/<repo>/` within a couple of minutes; the workflow run shows the exact URL.
+
+The workflow builds with the site's sub-path as the base URL, copies the app shell to `404.html` (Pages serves it for unknown paths, which is how deep links such as `/journey` work there), and adds `.nojekyll` so the `_expo` folder is published.
+
+**Custom domain.** Settings → Pages → Custom domain, add the DNS record GitHub shows, and set a repository variable `WEB_BASE_URL` to `/` (Settings → Secrets and variables → Actions → Variables) so the build stops prefixing paths with the repository name. The privacy policy then lives at the same domain, which is also what the store listings need.
+
+### Other static hosts
+
+`dist/` works on any static host that rewrites unknown paths to `index.html`:
+
+- **Netlify** and **Cloudflare Pages**: build command `npm run web:build`, publish directory `dist`; the `public/_redirects` file in the repo (`/* /index.html 200`) is included in the export.
+- **Vercel**: framework "Other", build command `npm run web:build`, output `dist`, plus a `vercel.json` with `{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}`.
 
 Put it on the MOCHI domain you already own and link the App Store and Google Play badges from the welcome screen once the apps are live.

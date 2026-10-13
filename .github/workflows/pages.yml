@@ -1,0 +1,63 @@
+name: Website (GitHub Pages)
+
+# Builds the web version of MOCHI and publishes it to GitHub Pages on every
+# push to main. One-time setup in the repository: Settings → Pages → Build and
+# deployment → Source: "GitHub Actions".
+#
+# The site is served under /<repo>/ by default. For a custom domain (or a
+# <user>.github.io repository) set a repository variable WEB_BASE_URL to "/"
+# in Settings → Secrets and variables → Actions → Variables.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Decide the base path
+        run: |
+          BASE="${{ vars.WEB_BASE_URL }}"
+          if [ -z "$BASE" ]; then BASE="/${{ github.event.repository.name }}"; fi
+          if [ "$BASE" = "/" ]; then BASE=""; fi
+          echo "EXPO_WEB_BASE_URL=$BASE" >> "$GITHUB_ENV"
+          echo "Base path: '$BASE'"
+      - name: Export the web app
+        run: npm run web:build
+      - name: Make the export Pages-friendly
+        run: |
+          # Pages has no rewrite rules: it serves 404.html for unknown paths,
+          # so a copy of the app shell there makes deep links work.
+          cp dist/index.html dist/404.html
+          # Jekyll would otherwise drop the _expo folder.
+          touch dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
