@@ -17,7 +17,9 @@ import {
   getBonusCount,
   getCompletedCount,
   getDailyChallenge,
+  getPetMood,
   getTodaySelfie,
+  moodLine,
   getGrowth,
   getStage,
   getVisualPath,
@@ -29,7 +31,7 @@ import { useAnimatedNumber } from '@/hooks/useCounter';
 import { useSelfie } from '@/hooks/useSelfie';
 import { selfieUri } from '@/services/selfies';
 import { useHaptics } from '@/hooks/useHaptics';
-import { formatLongDate, useTodayKey, now } from '@/hooks/useNow';
+import { formatLongDate, now, useNowMinute, useTodayKey } from '@/hooks/useNow';
 import { summarizeRewards, useCelebration } from '@/state/CelebrationProvider';
 import { useGame } from '@/state/GameProvider';
 import { Pill, ProgressBar, Ring, Screen, Text } from '@/ui/components';
@@ -57,6 +59,10 @@ export default function Today() {
   const challenge = getDailyChallenge(state.today.date || todayKey);
   const selfie = useSelfie();
   const todaySelfie = getTodaySelfie(state);
+  const [awake, setAwake] = useState(false);
+  const nowMs = useNowMinute();
+  const liveMood = getPetMood(state, nowMs);
+  const mood = liveMood === 'asleep' && awake ? getPetMood({ ...state, lastActiveAt: nowMs }, nowMs) : liveMood;
   const activity = state.today.activity;
   const movementDetail =
     state.profile.healthEnabled && activity
@@ -150,11 +156,23 @@ export default function Today() {
 
   const onPetPress = () => {
     haptic('tap');
+    setAwake(true);
     stageRef.current?.react();
   };
 
   const stageMeta = STAGES.find((s) => s.id === shownStage)!;
-  const caption = shownStage === 'egg' ? 'Complete goals to hatch' : 'Tap to interact';
+  const caption =
+    shownStage === 'egg'
+      ? 'Complete goals to hatch'
+      : mood === 'asleep'
+        ? 'Asleep · tap to wake'
+        : mood === 'thirsty'
+          ? 'Thirsty · log water'
+          : mood === 'hungry'
+            ? 'Hungry · eat well'
+            : mood === 'lazy'
+              ? 'Restless · move'
+              : 'Happy · all done';
 
   return (
     <Screen title="Today" subtitle={formatLongDate(todayKey)} settings inTabs contentContainerStyle={styles.content}>
@@ -182,8 +200,9 @@ export default function Today() {
         gear={state.progress.equippedGear}
         height={164}
         petScale={1.0}
+        mood={shownStage === 'egg' ? undefined : mood}
         onPress={onPetPress}
-        accessibilityLabel={`${state.profile.petName}, ${stageMeta.name} stage, ${PATH_BY_ID[path].name} path${state.progress.equippedGear !== 'none' ? `, wearing ${GEAR_BY_ID[state.progress.equippedGear].name}` : ''}`}
+        accessibilityLabel={`${state.profile.petName}, ${stageMeta.name} stage, ${PATH_BY_ID[path].name} path${state.progress.equippedGear !== 'none' ? `, wearing ${GEAR_BY_ID[state.progress.equippedGear].name}` : ''}. ${shownStage === 'egg' ? '' : moodLine(mood, state.profile.petName)}`}
       >
         <View style={styles.stageLabel} pointerEvents="none">
           <Text variant="caption" tone="inverse">

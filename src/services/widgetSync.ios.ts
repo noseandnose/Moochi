@@ -38,7 +38,7 @@ export async function syncWidget(state: GameState): Promise<void> {
   if (!mod) return;
   const { widgetsDirectory, widget } = mod;
   const snapshot = buildWidgetSnapshot(state);
-  const imageKey = [state.profile.petId, snapshot.stageName, snapshot.pathName, state.progress.equippedGear].join(':');
+  const imageKey = [state.profile.petId, snapshot.stageName, snapshot.pathName, state.progress.equippedGear, snapshot.mood].join(':');
   if (imageKey !== lastImageKey || !lastImageUri) {
     const base64 = await renderPetPng(state);
     if (base64) {
@@ -57,11 +57,12 @@ export async function syncWidget(state: GameState): Promise<void> {
     petName: snapshot.petName,
     stageName: snapshot.stageName,
     completed: snapshot.completed,
-    bonus: snapshot.bonus,
     level: snapshot.level,
-    xpToNext: snapshot.xpToNext,
-    nextStageName: snapshot.nextStageName,
     petImage: lastImageUri ?? '',
     isEgg: snapshot.isEgg,
+    statusLine: snapshot.statusLine,
+    waterDone: snapshot.waterDone,
+    movementDone: snapshot.movementDone,
+    eatingDone: snapshot.eatingDone,
   });
 }

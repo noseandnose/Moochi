@@ -46,6 +46,7 @@ export function createInitialState(): GameState {
     ledger: {},
     history: {},
     selfies: [],
+    lastActiveAt: 0,
   };
 }
 
@@ -116,7 +117,8 @@ export function sanitize(data: Record<string, unknown>): GameState {
   const history = sanitizeHistory(data.history);
   const selfies = sanitizeSelfies(data.selfies);
   const createdOn = isDateKey(data.createdOn) ? data.createdOn : null;
-  return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history, selfies };
+  const lastActiveAt = Math.floor(num(data.lastActiveAt, 0, 0));
+  return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history, selfies, lastActiveAt };
 }
 
 const PET_IDS: PetId[] = ['tofu', 'juno', 'pebble', 'ori', 'fern'];

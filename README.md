@@ -30,6 +30,10 @@ Five original pets in a chunky Tamagotchi-style pixel look, each with its own ha
 | --- | --- | --- | --- |
 | ![Bonus](docs/screenshots/today-egg.png) | ![Progress](docs/screenshots/progress.png) | ![Custom goal](docs/screenshots/custom-goal.png) | ![Settings](docs/screenshots/settings.png) |
 
+Pet moods, left to right: content, hungry, lazy, thirsty, asleep. The mood is the pet's way of pointing at the next goal, in the app and on the widget:
+
+![Moods](docs/screenshots/moods.png)
+
 Gear and evolution paths on every pet (teen and adult rows):
 
 ![Gear and paths](docs/screenshots/gear-and-paths.png)
@@ -127,7 +131,9 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 **Health sync** (Settings → Steps and workouts): on iOS it reads steps and workouts from Apple Health via HealthKit; on Android from Health Connect. When enabled, the app reads today's totals on launch, on every return to the foreground and every five minutes, and the movement goal completes itself when workout minutes reach your movement target or steps reach your step target (default 8,000, editable). Completion comes with the usual reward and celebration, exactly once per day. A manual check-in is never downgraded, and nothing is written to the health platforms. Android builds set `minSdkVersion` 26 as Health Connect requires; a Play Store release additionally needs the Health Connect data-access declaration in the Play Console.
 
-**Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/MochiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The widget shows the pet, name, stage and level, today's daily goal count, bonus count and XP to the next stage. It contains no habit details. Widgets need a development or store build.
+**Pet moods**: after hatching the pet always shows one of five states, chosen in priority order: asleep (no interaction for 36 hours; tapping wakes it), thirsty (water not logged), hungry (eating not checked in), lazy (movement not done), content (all three done). The Today stage shows the mood with a short caption, and the widget uses the same mood so a glance at the home screen says what to do next.
+
+**Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/MochiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The small widget shows only the pet in its current mood. The medium widget adds a one-line nudge ("Tofu is thirsty. Log some water.") and three buttons, Water, Move and Eat, each marked Done or Log, that deep-link straight to the water log or the goal screen (`mochi://today/water`, `mochi://today/goal/movement`, `mochi://today/goal/eating`). The widget contains no amounts, photos or health data. Widgets need a development or store build.
 
 ## Launch features
 
@@ -152,7 +158,7 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 Automated, run in this repository:
 
-- `npm test`: 63 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, onboarding validation, pet switching and renaming.
+- `npm test`: 66 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, pet mood priority and the asleep timer, onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
 - `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `MochiWidget` Swift file, the app group and the HealthKit entitlement.

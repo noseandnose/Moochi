@@ -1,4 +1,4 @@
-import { PATH_BY_ID, STAGES, getBonusCount, getCompletedCount, getGrowth, getStage, getVisualPath, type GameState } from '@/game';
+import { PATH_BY_ID, STAGES, getBonusCount, getCompletedCount, getGrowth, getPetMood, getStage, getVisualPath, isWaterDone, moodLine, type GameState, type PetMood } from '@/game';
 
 /** Everything a home screen widget needs, without any private habit data. */
 export interface WidgetSnapshot {
@@ -14,12 +14,25 @@ export interface WidgetSnapshot {
   coins: number;
   date: string;
   isEgg: boolean;
+  mood: PetMood;
+  /** One line telling the player what to do next. */
+  statusLine: string;
+  waterDone: boolean;
+  movementDone: boolean;
+  eatingDone: boolean;
 }
 
-export function buildWidgetSnapshot(state: GameState): WidgetSnapshot {
+export function buildWidgetSnapshot(state: GameState, now: number = Date.now()): WidgetSnapshot {
   const growth = getGrowth(state);
   const stage = getStage(state);
+  const isEgg = stage === 'egg';
+  const mood = getPetMood(state, now);
   return {
+    mood,
+    statusLine: isEgg ? 'Complete goals to hatch your pet.' : moodLine(mood, state.profile.petName),
+    waterDone: isWaterDone(state),
+    movementDone: state.today.movementDone,
+    eatingDone: state.today.eatingDone,
     petName: state.profile.petName,
     stageName: STAGES.find((s) => s.id === stage)?.name ?? 'Egg',
     pathName: PATH_BY_ID[getVisualPath(state)].name,

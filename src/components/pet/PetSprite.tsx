@@ -12,9 +12,9 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { GearId, HabitPath, PetId, StageId } from '@/game';
+import type { GearId, HabitPath, PetId, PetMood, StageId } from '@/game';
 
-import { CELL, SHEETS, SHEET_SIZE, eggCell, frameTable, overlayCell, type Cell, type EggFrame, type Eyes } from './sprites';
+import { CELL, SHEETS, SHEET_SIZE, eggCell, frameTable, moodCell, overlayCell, type Cell, type EggFrame, type Eyes } from './sprites';
 
 export interface PetSpriteHandle {
   /** Quick squash-and-stretch with happy eyes. */
@@ -39,6 +39,8 @@ export interface PetSpriteProps {
   reduceMotion?: boolean;
   /** Forces a particular idle frame (used in static previews). */
   staticEyes?: Eyes;
+  /** Shows a mood expression instead of the idle cycle until a reaction plays. */
+  mood?: PetMood;
   /** Called at the bright moment of a hatch or evolution so the parent can spawn particles. */
   onFlash?: () => void;
   /** Called with a pixel-aligned draw rect so parents can position particles. */
@@ -49,7 +51,7 @@ const NEAREST = { filter: FilterMode.Nearest, mipmap: MipmapMode.None } as const
 const MOTION_SEQUENCE = [0, 1, 1, 0, 2, 2];
 
 export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function PetSprite(
-  { petId, stage, path, gear, size, animate = true, reduceMotion = false, staticEyes, onFlash },
+  { petId, stage, path, gear, size, animate = true, reduceMotion = false, staticEyes, mood, onFlash },
   ref,
 ) {
   const sheet = useImage(SHEETS[petId]);
@@ -70,19 +72,20 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
 
   const happyUntil = useRef(0);
   const eggFrameRef = useRef<EggFrame>('idle');
+  const moodFrame = useMemo(() => (mood ? moodCell(petId, stage, mood) : null), [petId, stage, mood]);
 
-  // Reset the frame table when the pet or stage changes.
+  // Reset the frame table when the pet, stage or mood changes.
   useEffect(() => {
-    const first = stage === 'egg' ? eggCell(petId, 'idle') : frames.open[0];
+    const first = stage === 'egg' ? eggCell(petId, 'idle') : (moodFrame ?? frames.open[0]);
     cellX.value = first.x;
     cellY.value = first.y;
-  }, [frames, petId, stage, cellX, cellY]);
+  }, [frames, moodFrame, petId, stage, cellX, cellY]);
 
   // Idle frame loop on a JS timer: cheap, and paused when inactive.
   useEffect(() => {
     if (!animate || reduceMotion || staticEyes) {
       const eyes: Eyes = staticEyes ?? 'open';
-      const c = stage === 'egg' ? eggCell(petId, 'idle') : frames[eyes][0];
+      const c = stage === 'egg' ? eggCell(petId, 'idle') : (moodFrame ?? frames[eyes][0]);
       cellX.value = c.x;
       cellY.value = c.y;
       return;
@@ -108,7 +111,12 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
         const motion = MOTION_SEQUENCE[tick % MOTION_SEQUENCE.length];
         let eyes: Eyes = 'open';
         if (Date.now() < happyUntil.current) eyes = 'happy';
-        else {
+        else if (moodFrame) {
+          // A mood holds its expression; only the gentle breathing transform moves.
+          cellX.value = moodFrame.x;
+          cellY.value = moodFrame.y;
+          return;
+        } else {
           if (tick >= nextBlink) {
             blinkFrames = 1;
             nextBlink = tick + 16 + Math.floor(Math.random() * 18);
@@ -127,7 +135,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
       clearInterval(interval);
       sub.remove();
     };
-  }, [animate, reduceMotion, staticEyes, frames, petId, stage, cellX, cellY]);
+  }, [animate, reduceMotion, staticEyes, frames, moodFrame, petId, stage, cellX, cellY]);
 
   const showHappy = (ms: number) => {
     happyUntil.current = Date.now() + ms;

@@ -4,7 +4,7 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { Easing, cancelAnimation, useDerivedValue, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { PET_BY_ID, type GearId, type HabitPath, type PetId, type StageId } from '@/game';
+import { PET_BY_ID, type GearId, type HabitPath, type PetId, type PetMood, type StageId } from '@/game';
 import { useReduceMotion } from '@/hooks/useMotion';
 import { colors, radius } from '@/ui/theme';
 
@@ -68,6 +68,7 @@ export interface PetStageProps {
   onPress?: () => void;
   accessibilityLabel: string;
   animate?: boolean;
+  mood?: PetMood;
   children?: React.ReactNode;
 }
 
@@ -76,7 +77,7 @@ export interface PetStageProps {
  * and a particle layer for celebrations.
  */
 export const PetStage = forwardRef<PetStageHandle, PetStageProps>(function PetStage(
-  { petId, stage, path, gear, height = 220, petScale = 0.98, onPress, accessibilityLabel, animate = true, children },
+  { petId, stage, path, gear, height = 220, petScale = 0.98, onPress, accessibilityLabel, animate = true, mood, children },
   ref,
 ) {
   const [width, setWidth] = useState(0);
@@ -166,6 +167,7 @@ export const PetStage = forwardRef<PetStageHandle, PetStageProps>(function PetSt
             size={petSize}
             animate={active}
             reduceMotion={reduce}
+            mood={mood}
             onFlash={() => burst(1.3)}
           />
         </View>

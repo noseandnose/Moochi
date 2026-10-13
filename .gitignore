@@ -44,3 +44,6 @@ example
 
 # CanvasKit copied for web preview (npm run web:setup)
 public/canvaskit.wasm
+
+# Python
+__pycache__/

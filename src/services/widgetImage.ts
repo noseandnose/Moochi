@@ -1,8 +1,8 @@
 import { FilterMode, MipmapMode, Skia, type SkImage } from '@shopify/react-native-skia';
 import { Asset } from 'expo-asset';
 
-import { CELL, SHEETS, bodyCell, overlayCell } from '@/components/pet/sprites';
-import { getStage, getVisualPath, type GameState, type PetId } from '@/game';
+import { CELL, SHEETS, bodyCell, moodCell, overlayCell } from '@/components/pet/sprites';
+import { getPetMood, getStage, getVisualPath, type GameState, type PetId } from '@/game';
 
 const cache = new Map<PetId, Promise<SkImage | null>>();
 
@@ -42,7 +42,8 @@ export async function renderPetPng(state: GameState, scale = 3): Promise<string 
   canvas.clear(Skia.Color('transparent'));
   const stage = getStage(state);
   const path = getVisualPath(state);
-  const cells = [bodyCell(petId, stage, 0, stage === 'egg' ? 'open' : 'happy')];
+  const mood = getPetMood(state, Date.now());
+  const cells = [moodCell(petId, stage, mood) ?? bodyCell(petId, stage, 0, stage === 'egg' ? 'open' : 'happy')];
   if (path !== 'balanced') {
     const c = overlayCell(petId, stage, path);
     if (c) cells.push(c);

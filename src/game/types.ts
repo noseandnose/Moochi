@@ -15,6 +15,8 @@ export type BonusId = 'selfie' | 'bonus' | 'custom';
 export type CheckInId = 'movement' | 'eating' | 'bonus' | 'custom';
 export type RewardKey = GoalId | BonusId | 'allThree';
 export type MovementSource = 'manual' | 'health';
+/** How the pet looks right now: a nudge toward the next thing to do. */
+export type PetMood = 'asleep' | 'thirsty' | 'hungry' | 'lazy' | 'content';
 
 /** A single water log entry. Amounts are always stored in millilitres. */
 export interface WaterEntry {
@@ -109,6 +111,8 @@ export interface GameState {
   ledger: Ledger;
   history: Record<string, DailyRecord>;
   selfies: SelfieRecord[];
+  /** Last time the player did something in the app (ms). Drives the asleep mood. */
+  lastActiveAt: number;
 }
 
 export type GameEvent =

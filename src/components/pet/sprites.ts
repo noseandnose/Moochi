@@ -1,6 +1,6 @@
 import type { DataSourceParam } from '@shopify/react-native-skia';
 
-import type { GearId, HabitPath, PetId, StageId } from '@/game';
+import type { GearId, HabitPath, PetId, PetMood, StageId } from '@/game';
 import { ATLAS, CELL, SHEET_SIZES } from '@/assets/atlas';
 
 export { CELL };
@@ -35,6 +35,12 @@ function lookup(pet: PetId, key: string): Cell {
 export function bodyCell(pet: PetId, stage: StageId, motion: number, eyes: Eyes): Cell {
   if (stage === 'egg') return eggCell(pet, 'idle');
   return lookup(pet, `${stage}:${motion}:${eyes}`);
+}
+
+/** Mood frame (asleep, thirsty, hungry, lazy). Content and eggs have none. */
+export function moodCell(pet: PetId, stage: StageId, mood: PetMood): Cell | null {
+  if (stage === 'egg' || mood === 'content') return null;
+  return lookup(pet, `mood:${stage}:${mood}`);
 }
 
 export function eggCell(pet: PetId, frame: EggFrame): Cell {

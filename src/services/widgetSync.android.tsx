@@ -17,7 +17,7 @@ let lastImage: string | null = null;
 /** Stores the widget payload for the headless task and asks Android to re-render. */
 export async function syncWidget(state: GameState): Promise<void> {
   const snapshot = buildWidgetSnapshot(state);
-  const imageKey = [state.profile.petId, snapshot.stageName, snapshot.pathName, state.progress.equippedGear].join(':');
+  const imageKey = [state.profile.petId, snapshot.stageName, snapshot.pathName, state.progress.equippedGear, snapshot.mood].join(':');
   if (imageKey !== lastImageKey || !lastImage) {
     const base64 = await renderPetPng(state, 2);
     if (base64) {

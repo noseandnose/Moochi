@@ -16,9 +16,24 @@ GROUND = 57.0
 
 # ------------------------------------------------------------------ helpers
 
-def eye(c: Canvas, x: float, y: float, mode: str, scale: float = 1.0):
-    """Tamagotchi eye: a tall black oval with a highlight. (x, y) is top-left of a 4x5 box."""
+def eye(c: Canvas, x: float, y: float, mode: str, scale: float = 1.0, lid: str = "#000000"):
+    """Tamagotchi eye: a tall black oval with a highlight. (x, y) is top-left of a 4x5 box.
+
+    Modes: open, blink, happy, closed (content/asleep arc), droopy (half-lidded, `lid` is the fur colour).
+    """
     s = scale
+    if mode == "closed":
+        c.rect(x, y + 2.5 * s, 1 * s, 1 * s)
+        c.rect(x + 1 * s, y + 3 * s, 2 * s, 1 * s)
+        c.rect(x + 3 * s, y + 2.5 * s, 1 * s, 1 * s)
+        return
+    if mode == "droopy":
+        c.rect(x + 0.5 * s, y, 3 * s, 5 * s)
+        c.rect(x, y + 1 * s, 4 * s, 3 * s)
+        c.rect(x + 2.5 * s, y + 3.5 * s, 0.5 * s, 0.5 * s, "#9aa3a0")
+        c.rect(x - 0.2 * s, y - 0.2 * s, 4.4 * s, 2.4 * s, lid)
+        c.rect(x, y + 2 * s, 4 * s, 0.7 * s)
+        return
     if mode == "happy":
         c.rect(x, y + 2 * s, 1 * s, 2 * s)
         c.rect(x + 1 * s, y + 1 * s, 2 * s, 1 * s)
@@ -60,6 +75,82 @@ def oval(cx, cy, rx, ry, n=20):
     return [(cx + rx * math.cos(2 * math.pi * i / n), cy + ry * math.sin(2 * math.pi * i / n)) for i in range(n)]
 
 
+# ------------------------------------------------------------------ moods
+MOODS = ["asleep", "thirsty", "hungry", "lazy"]
+
+
+def mood_eyes(mood, eyes):
+    if mood == "asleep":
+        return "closed"
+    if mood in ("thirsty", "lazy"):
+        return "droopy"
+    return eyes
+
+
+def bubble(c, pts_fn, x, y, w, h):
+    """A rounded thought bubble whose bottom-left corner is near (x, y); returns its inner origin."""
+    body = [(x + 1, y - h), (x + w - 1, y - h), (x + w, y - h + 1), (x + w, y - 1), (x + w - 1, y), (x + 1, y), (x, y - 1), (x, y - h + 1)]
+    c.shape(pts_fn(body), "#fffef9", outline=INK, shading=False)
+    for i, (dx, dy, r) in enumerate([(-1.5, 1.5, 0.9), (-3, 3, 0.6)]):
+        c.shape(pts_fn(oval(x + dx, y + dy, r, r, 8)), "#fffef9", outline=INK, shading=False)
+    return x + 1, y - h + 1
+
+
+def finish_mood(c: Canvas, pet: str, mood, mouth, es, H, fur):
+    """Overrides the mouth and adds a prop for a mood. `mouth` = (x, y, w, h) in head coords."""
+    if not mood:
+        return
+    mx, my, mw, mh = mouth
+    g = GEAR[pet]
+    cx, top = g["top"]
+    hw = g["headW"]
+    # clear the drawn mouth
+    c.shape(H([(mx - 0.5, my - 1.2), (mx + mw + 0.5, my - 1.2), (mx + mw + 0.5, my + mh + 0.6), (mx - 0.5, my + mh + 0.6)]), fur, outline=None, shading=False)
+    midx = mx + mw / 2
+    if mood == "asleep":
+        x, y = H([(midx - 1, my + 0.2)])[0]
+        c.rect(x, y, 2 * es, 0.8 * es)
+        # drifting z's at the top right
+        for i, (zx, zy, k) in enumerate([(cx + hw / 2 + 2, top - 1, 1.0), (cx + hw / 2 + 5, top - 5, 1.3), (cx + hw / 2 + 9, top - 10, 1.6)]):
+            for px_, py_, w_, h_ in [(0, 0, 2, 0.6), (0, 2.4, 2, 0.6), (1.4, 0.6, 0.6, 0.6), (0.7, 1.3, 0.6, 0.6), (0, 1.9, 0.6, 0.6)]:
+                x, y = H([(zx + px_ * k, zy + py_ * k)])[0]
+                c.rect(x, y, w_ * k * es, h_ * k * es, "#6f7a85")
+    elif mood == "thirsty":
+        x, y = H([(midx - 1.5, my)])[0]
+        c.rect(x, y, 3 * es, 0.8 * es)
+        # tongue
+        c.shape(H([(midx - 1, my + 0.6), (midx + 1, my + 0.6), (midx + 1, my + 2.4), (midx - 1, my + 2.4)]), "#e08a8a", outline=INK, shading=False)
+        # sweat drop at the temple
+        droplet(c, H, cx + hw / 2 + 1.5, top + 6, 0.7, "#8fc3d8")
+        bx, by = bubble(c, H, cx + hw / 2 + 3, top - 1, 8, 7)
+        droplet(c, H, bx + 3.5, by + 0.6, 0.8)
+    elif mood == "hungry":
+        # wobbly mouth
+        for i, (dx, dy) in enumerate([(-3, 0.6), (-1.5, 0), (0, 0.6), (1.5, 0), (3, 0.6)]):
+            x, y = H([(midx + dx - 0.75, my + dy)])[0]
+            c.rect(x, y, 1.6 * es, 0.8 * es)
+        bx, by = bubble(c, H, cx + hw / 2 + 3, top - 1, 9, 7)
+        # bowl with steam
+        c.shape(H([(bx + 1.5, by + 2.5), (bx + 6.5, by + 2.5), (bx + 5.5, by + 5), (bx + 2.5, by + 5)]), "#d9a441", outline=INK, shading=False)
+        x, y = H([(bx + 2, by + 2.8)])[0]
+        c.rect(x, y, 4 * es, 0.7 * es, "#f3e3b0")
+        for sx_ in (bx + 3, bx + 5):
+            x, y = H([(sx_, by + 0.6)])[0]
+            c.rect(x, y, 0.6 * es, 1.4 * es, "#b7bbb3")
+    elif mood == "lazy":
+        # yawn
+        c.shape(H(oval(midx, my + 0.6, 1.6, 1.3, 10)), "#4a2f2f", outline=INK, shading=False)
+        x, y = H([(midx - 0.8, my + 1.1)])[0]
+        c.rect(x, y, 1.6 * es, 0.8 * es, "#e08a8a")
+        bx, by = bubble(c, H, cx + hw / 2 + 3, top - 1, 9, 7)
+        # dumbbell
+        x, y = H([(bx + 2.2, by + 3)])[0]
+        c.rect(x, y, 4.6 * es, 0.9 * es, "#4b5057")
+        for ex_ in (bx + 1.4, bx + 6.4):
+            x, y = H([(ex_, by + 1.9)])[0]
+            c.rect(x, y, 1.2 * es, 3.1 * es, "#4b5057")
+
+
 # ------------------------------------------------------------------ poses
 # (overall scale, head scale, head lift, x shift) per stage. Shared by the
 # body drawers and the overlay drawer so gear always lands on the head.
@@ -99,7 +190,8 @@ def transforms(stage: int, pet: str):
 TOFU = dict(fur="#efe6d2", dark="#8f8b82", inner="#d9b3a4", nose="#2a2823", blush="#e0b9a8")
 
 
-def draw_tofu(c: Canvas, stage: int, motion: int, eyes: str):
+def draw_tofu(c: Canvas, stage: int, motion: int, eyes: str, mood=None):
+    eyes = mood_eyes(mood, eyes)
     p = TOFU
     s, hs, T, H = transforms(stage, "tofu")
     bs = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.3}[stage]
@@ -140,7 +232,7 @@ def draw_tofu(c: Canvas, stage: int, motion: int, eyes: str):
     es = hs * s
     for ex in (22, 38):
         x, y = H([(ex, 27)])[0]
-        eye(c, x, y, eyes, es)
+        eye(c, x, y, eyes, es, p["fur"])
     nx, ny = H([(31, 33)])[0]
     c.rect(nx, ny, 2 * es, 1.5 * es, p["nose"])
     mx, my = H([(29, 35)])[0]
@@ -151,6 +243,7 @@ def draw_tofu(c: Canvas, stage: int, motion: int, eyes: str):
         c.rect(mx, my, 2 * es, 1 * es)
         c.rect(mx + 4 * es, my, 2 * es, 1 * es)
         c.rect(mx + 2 * es, my - 1 * es, 2 * es, 1 * es)
+    finish_mood(c, "tofu", mood, (28.5, 35, 7, 2), es, H, p["fur"])
     for bx in (18.5, 41.5):
         x, y = H([(bx, 32)])[0]
         blush(c, x, y, p["blush"], es)
@@ -169,7 +262,8 @@ def draw_tofu(c: Canvas, stage: int, motion: int, eyes: str):
 JUNO = dict(body="#8a7a6b", wing="#6a5b4f", face="#f2e8d6", belly="#e7dcc6", beak="#d9a441", blush="#d9b3a4")
 
 
-def draw_juno(c: Canvas, stage: int, motion: int, eyes: str):
+def draw_juno(c: Canvas, stage: int, motion: int, eyes: str, mood=None):
+    eyes = mood_eyes(mood, eyes)
     p = JUNO
     s, hs, T, H = transforms(stage, "juno")
     bs = {1: 0.8, 2: 1.0, 3: 1.18, 4: 1.28}[stage]
@@ -203,9 +297,13 @@ def draw_juno(c: Canvas, stage: int, motion: int, eyes: str):
     es = hs * s * 1.25
     for ex in (22.5, 36.5):
         x, y = H([(ex, 21)])[0]
-        eye(c, x, y, eyes, es)
+        eye(c, x, y, eyes, es, p["face"])
     # beak
     c.shape(H([(30, 29), (34, 29), (32, 33)]), p["beak"], shading=False)
+    if mood and mood != "asleep":
+        finish_mood(c, "juno", mood, (31, 33.5, 2, 0.1), es, H, p["body"])
+    elif mood == "asleep":
+        finish_mood(c, "juno", mood, (31, 36, 2, 0.1), es, H, p["body"])
     if eyes == "happy":
         for bx in (21, 40):
             x, y = H([(bx, 31)])[0]
@@ -222,7 +320,8 @@ def draw_juno(c: Canvas, stage: int, motion: int, eyes: str):
 PEBBLE = dict(body="#8db5ad", dark="#5f8a82", gill="#e0907a", gill2="#c4705c", belly="#dfe9df", blush="#f0b5a3")
 
 
-def draw_pebble(c: Canvas, stage: int, motion: int, eyes: str):
+def draw_pebble(c: Canvas, stage: int, motion: int, eyes: str, mood=None):
+    eyes = mood_eyes(mood, eyes)
     p = PEBBLE
     s, hs, T, H = transforms(stage, "pebble")
     bs = {1: 0.8, 2: 1.0, 3: 1.15, 4: 1.25}[stage]
@@ -260,7 +359,7 @@ def draw_pebble(c: Canvas, stage: int, motion: int, eyes: str):
     es = hs * s
     for ex in (22, 38):
         x, y = H([(ex, 24)])[0]
-        eye(c, x, y, eyes, es)
+        eye(c, x, y, eyes, es, p["body"])
     mx, my = H([(26, 33)])[0]
     if eyes == "happy":
         c.rect(mx, my, 12 * es, 1.5 * es, INK)
@@ -269,6 +368,7 @@ def draw_pebble(c: Canvas, stage: int, motion: int, eyes: str):
         c.rect(mx, my - 1 * es, 1 * es, 1 * es)
         c.rect(mx + 1 * es, my, 10 * es, 1 * es)
         c.rect(mx + 11 * es, my - 1 * es, 1 * es, 1 * es)
+    finish_mood(c, "pebble", mood, (26, 32, 12, 2), es, H, p["body"])
     for bx in (19.5, 41):
         x, y = H([(bx, 30)])[0]
         blush(c, x, y, p["blush"], es)
@@ -284,7 +384,8 @@ def draw_pebble(c: Canvas, stage: int, motion: int, eyes: str):
 ORI = dict(body="#3f4650", dark="#2f353d", belly="#f3eee2", beak="#e0a84a", blush="#d9a7a0", crest="#e2c977")
 
 
-def draw_ori(c: Canvas, stage: int, motion: int, eyes: str):
+def draw_ori(c: Canvas, stage: int, motion: int, eyes: str, mood=None):
+    eyes = mood_eyes(mood, eyes)
     p = ORI
     s, hs, T, H = transforms(stage, "ori")
     bs = {1: 0.8, 2: 1.0, 3: 1.2, 4: 1.3}[stage]
@@ -309,9 +410,11 @@ def draw_ori(c: Canvas, stage: int, motion: int, eyes: str):
     es = hs * s
     for ex in (23, 37):
         x, y = H([(ex, 22)])[0]
-        eye(c, x, y, eyes, es)
+        eye(c, x, y, eyes, es, p["belly"])
     beak = [(29, 28), (35, 28), (32, 32)]
     c.shape(H(beak), p["beak"], shading=False)
+    if mood:
+        finish_mood(c, "ori", mood, (31, 32.5, 2, 0.1), es, H, p["belly"])
     if eyes == "happy":
         for bx in (21, 40):
             x, y = H([(bx, 29)])[0]
@@ -331,7 +434,8 @@ def draw_ori(c: Canvas, stage: int, motion: int, eyes: str):
 FERN = dict(body="#8fae74", dark="#5f8a4e", face="#eef2dc", leaf="#5f8a4e", leaf2="#9cc07a", blush="#d4b58f", bloom="#faf5e6")
 
 
-def draw_fern(c: Canvas, stage: int, motion: int, eyes: str):
+def draw_fern(c: Canvas, stage: int, motion: int, eyes: str, mood=None):
+    eyes = mood_eyes(mood, eyes)
     p = FERN
     s, hs, T, H = transforms(stage, "fern")
     bs = {1: 0.85, 2: 1.0, 3: 1.1, 4: 1.18}[stage]
@@ -353,7 +457,7 @@ def draw_fern(c: Canvas, stage: int, motion: int, eyes: str):
     es = hs * s
     for ex in (23, 37):
         x, y = H([(ex, 28)])[0]
-        eye(c, x, y, eyes, es)
+        eye(c, x, y, eyes, es, p["face"])
     mx, my = H([(30, 36)])[0]
     if eyes == "happy":
         c.rect(mx, my, 5 * es, 1.5 * es, INK)
@@ -362,6 +466,7 @@ def draw_fern(c: Canvas, stage: int, motion: int, eyes: str):
         c.rect(mx, my - 1 * es, 1 * es, 1 * es)
         c.rect(mx + 1 * es, my, 3 * es, 1 * es)
         c.rect(mx + 4 * es, my - 1 * es, 1 * es, 1 * es)
+    finish_mood(c, "fern", mood, (30, 35, 5, 2), es, H, p["face"])
     for bx in (20.5, 40.5):
         x, y = H([(bx, 34)])[0]
         blush(c, x, y, p["blush"], es)

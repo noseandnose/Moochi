@@ -149,6 +149,9 @@ export const DEFAULTS = {
 
 export const LEVEL_XP = 100;
 
+/** Hours without any interaction before the pet falls asleep. */
+export const ASLEEP_AFTER_HOURS = 36;
+
 export const ACHIEVEMENTS: { id: string; title: string; description: string }[] = [
   { id: 'firstStep', title: 'First step', description: 'Complete a daily goal' },
   { id: 'hatched', title: 'Hatched', description: 'Reach 100 XP' },

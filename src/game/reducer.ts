@@ -27,6 +27,17 @@ import type {
  * the local calendar date has changed.
  */
 export function reduce(state: GameState, action: GameAction): GameResult {
+  const result = reduceAction(state, action);
+  const now = 'now' in action ? action.now : null;
+  if (now !== null && USER_ACTIONS.has(action.type) && result.state !== state) {
+    return { ...result, state: { ...result.state, lastActiveAt: Math.max(result.state.lastActiveAt, now) } };
+  }
+  return result;
+}
+
+const USER_ACTIONS = new Set<GameAction['type']>(['completeOnboarding', 'addWater', 'undoWater', 'setCheckIn', 'recordSelfie', 'removeSelfie', 'updateProfile']);
+
+function reduceAction(state: GameState, action: GameAction): GameResult {
   switch (action.type) {
     case 'sync':
       return syncDay(state, action.now);

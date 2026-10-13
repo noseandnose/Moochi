@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from PIL import Image
 
-from pets import DRAWERS, draw_egg, draw_overlay
+from pets import DRAWERS, MOODS, draw_egg, draw_overlay
 from pixel import Canvas
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,6 +44,11 @@ def build_sheet(pet: str):
                 c = Canvas()
                 DRAWERS[pet](c, stage, m, e)
                 cells.append((f"{STAGES[stage]}:{m}:{e}", c.image()))
+    for stage in range(1, 5):
+        for mood in MOODS:
+            c = Canvas()
+            DRAWERS[pet](c, stage, 0, "open", mood)
+            cells.append((f"mood:{STAGES[stage]}:{mood}", c.image()))
     for stage in range(1, 5):
         for kind in OVERLAYS:
             c = Canvas()

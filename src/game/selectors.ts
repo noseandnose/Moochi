@@ -1,5 +1,6 @@
 import {
   ACHIEVEMENTS,
+  ASLEEP_AFTER_HOURS,
   CHALLENGES,
   LEVEL_XP,
   PATH_STAGE_MIN,
@@ -7,7 +8,7 @@ import {
   STAGE_INDEX,
 } from './constants';
 import { dateKey, dateKeyToNumber, recentDateKeys } from './date';
-import type { BonusId, DailyRecord, GameState, GoalId, HabitPath, SelfieRecord, StageId } from './types';
+import type { BonusId, DailyRecord, GameState, GoalId, HabitPath, PetMood, SelfieRecord, StageId } from './types';
 import { isWaterTargetReached, waterPercent } from './water';
 
 export function isOnboarded(state: GameState): boolean {
@@ -148,6 +149,35 @@ export function activitySatisfiesMovement(state: GameState): boolean {
   const a = state.today.activity;
   if (!a) return false;
   return a.workoutMinutes >= state.profile.movementMinutes || a.steps >= state.profile.stepTarget;
+}
+
+/**
+ * The pet's current mood, in priority order: asleep after a long absence,
+ * then the first unfinished daily goal (water, eating, movement), else content.
+ * Eggs have no mood.
+ */
+export function getPetMood(state: GameState, now: number): PetMood {
+  if (state.lastActiveAt > 0 && now - state.lastActiveAt >= ASLEEP_AFTER_HOURS * 3600 * 1000) return 'asleep';
+  if (!isWaterDone(state)) return 'thirsty';
+  if (!state.today.eatingDone) return 'hungry';
+  if (!state.today.movementDone) return 'lazy';
+  return 'content';
+}
+
+/** Short line that says what the mood is asking for. */
+export function moodLine(mood: PetMood, petName: string): string {
+  switch (mood) {
+    case 'asleep':
+      return `${petName} dozed off. Open the app to wake up.`;
+    case 'thirsty':
+      return `${petName} is thirsty. Log some water.`;
+    case 'hungry':
+      return `${petName} is hungry. Check in on eating well.`;
+    case 'lazy':
+      return `${petName} feels lazy. Log some movement.`;
+    case 'content':
+      return `${petName} is happy. All three goals done.`;
+  }
 }
 
 export function getTodaySelfie(state: GameState): SelfieRecord | undefined {
