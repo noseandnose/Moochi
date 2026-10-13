@@ -13,7 +13,8 @@
     "test": "jest",
     "art": "python3 tools/art/build.py",
     "doctor": "expo-doctor",
-    "web:setup": "node -e \"require('fs').mkdirSync('public',{recursive:true});require('fs').copyFileSync(require.resolve('canvaskit-wasm/bin/full/canvaskit.wasm'),'public/canvaskit.wasm')\""
+    "web:setup": "node -e \"require('fs').mkdirSync('public',{recursive:true});require('fs').copyFileSync(require.resolve('canvaskit-wasm/bin/full/canvaskit.wasm'),'public/canvaskit.wasm')\"",
+    "web:build": "npm run web:setup && expo export --platform web"
   },
   "dependencies": {
     "@expo/ui": "~57.0.23",

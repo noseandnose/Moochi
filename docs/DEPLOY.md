@@ -166,3 +166,26 @@ Health Connect: until the Health apps declaration from Phase 3 is approved, the 
 | Upload to TestFlight | `eas submit --platform ios --latest` |
 | Upload to Play internal testing | `eas submit --platform android --latest` |
 | Manage signing | `eas credentials` |
+
+## The website
+
+The same code runs in the browser and can be hosted as a static site, which gives people a way to try MOCHI without installing anything and doubles as a landing page for the store links.
+
+What works on the web: onboarding, the three goals, water log, bonuses with a photo uploaded from the device, the pet, gear, evolution paths, journey, streaks, settings, backup export and import (as a downloaded JSON without photos), and the share link. Progress persists in the browser's local storage for that browser only. What does not: the home screen widget, Apple Health / Health Connect, notifications, the camera (the picker offers the photo library), and saving the share card to Photos. The app hides or disables each of those on the web.
+
+Build:
+
+```bash
+npm run web:build
+```
+
+This copies the CanvasKit runtime into `public/` and exports a static site to `dist/`: one `index.html`, one JavaScript bundle (about 5 MB uncompressed, under 1 MB over the wire with compression), the pixel assets, and `canvaskit.wasm` (8 MB, about 3 MB compressed). The first visit takes a few seconds on mobile data; later visits are cached.
+
+Host `dist/` on any static host that can rewrite unknown paths to `index.html` (the app is a single-page app, so `/journey` must serve `index.html`):
+
+- **Netlify**: drag `dist/` onto the dashboard, or connect the repo with build command `npm run web:build` and publish directory `dist`. Add a `public/_redirects` file containing `/* /index.html 200` so deep links work.
+- **Vercel**: import the repo, framework "Other", build command `npm run web:build`, output `dist`, and a `vercel.json` with `{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}`.
+- **Cloudflare Pages**: same build settings; add `public/_redirects` with `/* /index.html 200`.
+- **GitHub Pages**: works only with a copy of `index.html` saved as `404.html` (Pages serves it for unknown paths), and the site must live at the domain root, not a `/repo` sub-path.
+
+Put it on the MOCHI domain you already own and link the App Store and Google Play badges from the welcome screen once the apps are live.
