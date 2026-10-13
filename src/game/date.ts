@@ -32,3 +32,9 @@ export function recentDateKeys(now: number | Date, count: number): string[] {
 export function dateKeyToNumber(key: string): number {
   return Number(key.replace(/-/g, '')) || 0;
 }
+
+/** The date key `offset` days after `key` (negative for earlier days). */
+export function shiftDateKey(key: string, offset: number): string {
+  const [y, m, d] = key.split('-').map(Number);
+  return dateKey(new Date(y, m - 1, d + offset, 12));
+}

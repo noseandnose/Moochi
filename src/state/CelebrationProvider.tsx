@@ -21,7 +21,7 @@ export function CelebrationProvider({ children }: { children: React.ReactNode })
   const [pending, setPending] = useState<Celebration | null>(null);
   const counter = useRef(0);
   const queue = useCallback((events: GameEvent[]) => {
-    const meaningful = events.filter((e) => e.type === 'reward' || e.type === 'stageChanged' || e.type === 'goalCompleted' || e.type === 'allGoalsCompleted');
+    const meaningful = events.filter((e) => e.type === 'reward' || e.type === 'stageChanged' || e.type === 'goalCompleted' || e.type === 'allGoalsCompleted' || e.type === 'streakExtended' || e.type === 'freezeEarned');
     if (!meaningful.length) return;
     counter.current += 1;
     setPending({ id: counter.current, events: meaningful });
@@ -38,11 +38,13 @@ export function useCelebration() {
 }
 
 /** Sums the XP and coins from a batch of events. */
-export function summarizeRewards(events: GameEvent[]): { xp: number; coins: number; stageTo: string | null; stageFrom: string | null } {
+export function summarizeRewards(events: GameEvent[]): { xp: number; coins: number; stageTo: string | null; stageFrom: string | null; streak: number; freezeEarned: boolean } {
   let xp = 0;
   let coins = 0;
   let stageTo: string | null = null;
   let stageFrom: string | null = null;
+  let streak = 0;
+  let freezeEarned = false;
   for (const e of events) {
     if (e.type === 'reward') {
       xp += e.xp;
@@ -52,6 +54,8 @@ export function summarizeRewards(events: GameEvent[]): { xp: number; coins: numb
       stageTo = e.to;
       stageFrom = e.from;
     }
+    if (e.type === 'streakExtended') streak = e.streak;
+    if (e.type === 'freezeEarned') freezeEarned = true;
   }
-  return { xp, coins, stageTo, stageFrom };
+  return { xp, coins, stageTo, stageFrom, streak, freezeEarned };
 }

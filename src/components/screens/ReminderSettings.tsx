@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react-native';
+import { Bell, Flame } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
 
@@ -24,7 +24,7 @@ export function ReminderSettings() {
   const { state, dispatch } = useGame();
   const toast = useToast();
   const haptic = useHaptics();
-  const { reminderEnabled, reminderHour, reminderMinute } = state.prefs;
+  const { reminderEnabled, reminderHour, reminderMinute, nudgesEnabled } = state.prefs;
   const [custom, setCustom] = useState(`${String(reminderHour).padStart(2, '0')}:${String(reminderMinute).padStart(2, '0')}`);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +67,7 @@ export function ReminderSettings() {
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="bodyStrong">Daily reminder</Text>
           <Text variant="small" tone="muted">
-            {reminderEnabled ? `One notification at ${formatTime(reminderHour, reminderMinute)} with today's remaining goals.` : 'One notification a day, at a time you choose.'}
+            {reminderEnabled ? `At ${formatTime(reminderHour, reminderMinute)}, saying what ${state.profile.petName} still needs. Silent once all three are done.` : 'One notification a day, at a time you choose.'}
           </Text>
         </View>
         <Switch
@@ -99,6 +99,29 @@ export function ReminderSettings() {
         })}
       </View>
       <Field label="Custom time (24-hour)" value={custom} onChangeText={setCustom} onBlur={saveCustom} onSubmitEditing={saveCustom} keyboardType="numbers-and-punctuation" placeholder="19:30" error={error} returnKeyType="done" />
+      <View style={[styles.row, { opacity: reminderEnabled ? 1 : 0.5 }]}>
+        <View style={styles.icon}>
+          <Flame size={20} color={colors.sageDeep} strokeWidth={2.2} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="bodyStrong">Nudges</Text>
+          <Text variant="small" tone="muted">
+            A water nudge at 1:00 PM while water is behind, and a streak warning at 8:30 PM while a streak is at risk. Nothing on days they do not apply.
+          </Text>
+        </View>
+        <Switch
+          accessibilityLabel="Nudges"
+          value={reminderEnabled && nudgesEnabled}
+          disabled={!reminderEnabled}
+          onValueChange={(v) => {
+            dispatch({ type: 'updatePrefs', patch: { nudgesEnabled: v } });
+            haptic('select');
+          }}
+          trackColor={{ true: colors.sage, false: colors.lineStrong }}
+          thumbColor={colors.surface}
+          ios_backgroundColor={colors.lineStrong}
+        />
+      </View>
     </Card>
   );
 }

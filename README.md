@@ -30,6 +30,11 @@ Five original pets in a chunky Tamagotchi-style pixel look, each with its own ha
 | --- | --- | --- | --- |
 | ![Bonus](docs/screenshots/today-egg.png) | ![Progress](docs/screenshots/progress.png) | ![Custom goal](docs/screenshots/custom-goal.png) | ![Settings](docs/screenshots/settings.png) |
 
+Streaks on Today (no streak, day one, at risk, day seven with a freeze earned) and on Journey (at risk, after buying a freeze, holding the maximum):
+
+![Streak on Today](docs/screenshots/streak-today.png)
+![Streak on Journey](docs/screenshots/streak-journey.png)
+
 Pet moods, left to right: content, hungry, lazy, thirsty, asleep. The mood is the pet's way of pointing at the next goal, in the app and on the widget:
 
 ![Moods](docs/screenshots/moods.png)
@@ -141,7 +146,9 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 ## Launch features
 
-- **Daily reminder** (Settings → Daily reminder): one local notification at a chosen time (presets or a custom 24-hour time). The body is re-scheduled after every change so it reflects today's remaining goals ("2 of 3 goals left today. Tofu is waiting."), or a neutral line for tomorrow once the time has passed. `expo-notifications`, local only, no push service.
+- **Streaks** (Today pill and Journey → Streak): a day joins the streak as soon as any one of the three goals earns its reward, so a partial day still counts. The Today pill is dark with a gold flame once today is earned, outlined with a red flame while a live streak is at risk, and tapping it opens Journey. Every seventh streak day earns a streak freeze (up to two held), and a freeze can also be bought for 60 coins. A freeze is spent automatically at rollover on a missed day, the frozen day counts toward the streak, and the first uncovered miss ends it. Journey shows the current and best streak, freezes held, days to the next free one, and the count of perfect (all-three) days. Streak and freeze state live in the saved game and survive backup and restore.
+- **State-aware reminders** (Settings → Daily reminder): local notifications are re-planned from the game state after every change and on every return to the foreground, so each one says what the pet needs at that moment. The evening reminder at the chosen time names the first unfinished goal in the pet's voice ("Juno is hungry. Check in on eating well.") and stays silent once all three are done. With Nudges on, a 1:00 PM water nudge fires only while water is behind, with the amount left, and an 8:30 PM warning fires only while a streak is at risk, folded into the evening reminder when the two are within 90 minutes. Slots already passed are planned for tomorrow with a line that is true at the start of any day. The planner is pure and unit-tested (`src/services/reminderPlan.ts`); scheduling uses `expo-notifications` one-shot date triggers, local only.
+- **Widget prompt** (Today, once, after the first hatch): a card invites the player to put the pet on the home screen. On Android it asks the launcher to place the widget directly (`requestPinWidget`); on iOS it opens a how-to screen with the steps, which is also reachable from Settings → Home screen widget.
 - **Backup and restore** (Settings → Backup): exports a JSON file containing the full game state plus progress photos (base64) through the share sheet; restore picks a file, validates it through the same sanitiser used at startup, writes the photos back and replaces the state after an explicit confirmation. Restoring then rolls the day to today.
 - **First-run coach mark** on Today, dismissed once; a **welcome-back card** after two or more days away that says progress was kept.
 - **Store review prompt**: requested once, a few seconds after the first evolution past hatching (teen stage), through the native in-app review API.
@@ -162,7 +169,7 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 Automated, run in this repository:
 
-- `npm test`: 66 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, pet mood priority and the asleep timer, onboarding validation, pet switching and renaming.
+- `npm test`: 82 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, pet mood priority and the asleep timer, streaks (partial days count, undo keeps the day, freeze earning every seven days, freezes spent in order across a gap, cap, purchase, persistence), reminder planning (goal-aware evening text, water nudge with amount left, streak warning folding, tomorrow fallbacks, nudges off), onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
 - `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `MochiWidget` Swift file, the app group and the HealthKit entitlement.

@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Flame } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CoinIcon } from '@/components/icons';
 import { BonusCarousel, type BonusTile } from '@/components/home/BonusCarousel';
 import { CoachMark } from '@/components/home/CoachMark';
+import { WidgetPrompt } from '@/components/home/WidgetPrompt';
 import { GoalCard } from '@/components/home/GoalCard';
 import { RewardBanner } from '@/components/home/RewardBanner';
 import { PetStage, type PetStageHandle } from '@/components/pet/PetStage';
@@ -18,6 +19,7 @@ import {
   getCompletedCount,
   getDailyChallenge,
   getPetMood,
+  getStreakInfo,
   getTodaySelfie,
   moodLine,
   getGrowth,
@@ -30,6 +32,8 @@ import {
 import { useAnimatedNumber } from '@/hooks/useCounter';
 import { useSelfie } from '@/hooks/useSelfie';
 import { selfieUri } from '@/services/selfies';
+import { canPinWidget, pinWidget } from '@/services/widgetPin';
+import { widgetSupported } from '@/services/widgetSync';
 import { useHaptics } from '@/hooks/useHaptics';
 import { formatLongDate, now, useNowMinute, useTodayKey } from '@/hooks/useNow';
 import { summarizeRewards, useCelebration } from '@/state/CelebrationProvider';
@@ -63,6 +67,7 @@ export default function Today() {
   const nowMs = useNowMinute();
   const liveMood = getPetMood(state, nowMs);
   const mood = liveMood === 'asleep' && awake ? getPetMood({ ...state, lastActiveAt: nowMs }, nowMs) : liveMood;
+  const streak = getStreakInfo(state, nowMs);
   const activity = state.today.activity;
   const movementDetail =
     state.profile.healthEnabled && activity
@@ -73,7 +78,8 @@ export default function Today() {
   useEffect(() => {
     if (!pending || busy.current) return;
     const id = pending.id;
-    const { xp, coins: c, stageFrom, stageTo } = summarizeRewards(pending.events);
+    const { xp, coins: c, stageFrom, stageTo, streak: streakNow, freezeEarned } = summarizeRewards(pending.events);
+    const streakNote = freezeEarned ? ` Day ${streakNow}: you earned a streak freeze.` : streakNow >= 2 ? ` Day ${streakNow} of your streak.` : '';
     consume(id);
     busy.current = true;
     (async () => {
@@ -94,7 +100,7 @@ export default function Today() {
       } else if (xp > 0) {
         haptic('reward');
         const all = pending.events.some((e) => e.type === 'allGoalsCompleted');
-        setBanner({ id, title: all ? 'All three done. Bonus earned.' : 'Goal complete. Progress earned.', xp, coins: c });
+        setBanner({ id, title: (all ? 'All three done. Bonus earned.' : 'Goal complete. Progress earned.') + streakNote, xp, coins: c });
         stageRef.current?.celebrate();
       } else {
         stageRef.current?.react();
@@ -186,11 +192,39 @@ export default function Today() {
         </Pressable>
       ) : null}
       {!state.prefs.coachMarkSeen && !banner ? <CoachMark petName={state.profile.petName} onDismiss={() => dispatch({ type: 'updatePrefs', patch: { coachMarkSeen: true } })} /> : null}
+      {widgetSupported && state.prefs.coachMarkSeen && !state.prefs.widgetPromptSeen && realStage !== 'egg' && !banner ? (
+        <WidgetPrompt
+          petName={state.profile.petName}
+          direct={canPinWidget}
+          onDismiss={() => dispatch({ type: 'updatePrefs', patch: { widgetPromptSeen: true } })}
+          onAdd={async () => {
+            if (canPinWidget && (await pinWidget())) {
+              dispatch({ type: 'updatePrefs', patch: { widgetPromptSeen: true } });
+              return;
+            }
+            dispatch({ type: 'updatePrefs', patch: { widgetPromptSeen: true } });
+            router.push('/widget');
+          }}
+        />
+      ) : null}
       <View style={styles.petHeading}>
         <Text variant="subheading" accessibilityRole="header">
           {state.profile.petName}
         </Text>
-        <Pill label={`${coins} coins`} tone="coin" icon={<CoinIcon />} accessibilityLabel={`${state.progress.coins} coins`} />
+        <View style={styles.pills}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={streak.current === 0 ? 'No streak yet. One goal a day starts one. View journey' : `${streak.current} day streak${streak.atRisk ? ', at risk today' : ''}. View journey`}
+            onPress={() => router.navigate('/(tabs)/journey')}
+          >
+            <Pill
+              label={streak.current === 0 ? 'Start a streak' : `${streak.current} day${streak.current === 1 ? '' : 's'}`}
+              tone={streak.current > 0 && !streak.atRisk ? 'ink' : 'surface'}
+              icon={<Flame size={15} color={streak.current > 0 && !streak.atRisk ? colors.coin : streak.atRisk ? colors.danger : colors.inkMuted} strokeWidth={2.4} />}
+            />
+          </Pressable>
+          <Pill label={`${coins} coins`} tone="coin" icon={<CoinIcon />} accessibilityLabel={`${state.progress.coins} coins`} />
+        </View>
       </View>
       <PetStage
         ref={stageRef}
@@ -284,6 +318,7 @@ const styles = StyleSheet.create({
   content: { gap: 10 },
   welcome: { gap: 2, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   petHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pills: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   stageLabel: {
     position: 'absolute',
     top: 12,

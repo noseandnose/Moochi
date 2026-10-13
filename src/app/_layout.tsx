@@ -53,6 +53,7 @@ function Routes() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="settings" options={{ presentation: 'modal', gestureEnabled: true }} />
         <Stack.Screen name="privacy" options={{ presentation: 'modal', gestureEnabled: true }} />
+        <Stack.Screen name="widget" options={{ presentation: 'modal', gestureEnabled: true }} />
       </Stack.Protected>
       <Stack.Protected guard={!onboarded}>
         <Stack.Screen name="onboarding" />

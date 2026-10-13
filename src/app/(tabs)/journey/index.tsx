@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, Medal, Sparkles } from 'lucide-react-native';
+import { Check, Flame, Medal, Snowflake, Sparkles } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -7,23 +7,40 @@ import { PetPortrait } from '@/components/pet/PetPortrait';
 import {
   PATH_BY_ID,
   STAGES,
+  STREAK,
   fromDateKey,
   getAchievements,
   getActiveDays,
   getGrowth,
   getLastSevenDays,
   getStageIndex,
+  getStreakInfo,
   getVisualPath,
 } from '@/game';
-import { useTodayKey } from '@/hooks/useNow';
-import { useGameState } from '@/state/GameProvider';
-import { Button, Card, ProgressBar, Screen, SectionHeading, Text } from '@/ui/components';
+import { useHaptics } from '@/hooks/useHaptics';
+import { useNowMinute, useTodayKey } from '@/hooks/useNow';
+import { useGame } from '@/state/GameProvider';
+import { Button, Card, ProgressBar, Screen, SectionHeading, Text, useToast } from '@/ui/components';
 import { colors, radius, spacing } from '@/ui/theme';
 
 export default function Journey() {
   const router = useRouter();
-  const state = useGameState();
+  const { state, dispatch } = useGame();
+  const toast = useToast();
+  const haptic = useHaptics();
   const todayKey = useTodayKey();
+  const nowMs = useNowMinute();
+  const streak = getStreakInfo(state, nowMs);
+  const buyFreeze = () => {
+    const events = dispatch({ type: 'buyFreeze' });
+    const err = events.find((e) => e.type === 'error');
+    if (err && err.type === 'error') {
+      toast(err.message, 'danger');
+      return;
+    }
+    haptic('reward');
+    toast('Streak freeze added. It is used automatically on a missed day.');
+  };
   const growth = getGrowth(state);
   const activeDays = getActiveDays(state).length;
   const week = getLastSevenDays(state, fromDateKey(todayKey).getTime());
@@ -48,6 +65,43 @@ export default function Journey() {
         </Card>
       </View>
 
+      <SectionHeading title="Streak" />
+      <Card style={{ gap: spacing.md }}>
+        <View style={styles.streakRow}>
+          <View style={[styles.flame, streak.current > 0 && !streak.atRisk && styles.flameLit]}>
+            <Flame size={26} color={streak.current > 0 && !streak.atRisk ? colors.surface : streak.atRisk ? colors.danger : colors.inkFaint} strokeWidth={2.4} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text variant="subheading">{streak.current === 0 ? 'No streak yet' : `${streak.current}-day streak`}</Text>
+            <Text variant="small" tone={streak.atRisk ? 'danger' : 'soft'}>
+              {streak.current === 0
+                ? 'One goal a day keeps it going. Any goal counts.'
+                : streak.atRisk
+                  ? 'At risk: log one goal today to keep it.'
+                  : `Today is in. Best: ${streak.best} ${streak.best === 1 ? 'day' : 'days'}.`}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.freezeRow}>
+          <View style={styles.freezeIcons} accessible accessibilityLabel={`${streak.freezes} of ${streak.maxFreezes} streak freezes held`}>
+            {Array.from({ length: streak.maxFreezes }).map((_, i) => (
+              <View key={i} style={[styles.freeze, i < streak.freezes && styles.freezeHeld]}>
+                <Snowflake size={16} color={i < streak.freezes ? colors.surface : colors.inkFaint} strokeWidth={2.4} />
+              </View>
+            ))}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text variant="smallStrong">
+              {streak.freezes} {streak.freezes === 1 ? 'freeze' : 'freezes'}
+            </Text>
+            <Text variant="caption" tone="muted">
+              {streak.freezes >= streak.maxFreezes ? 'HOLDING THE MAXIMUM' : `A FREEZE COVERS ONE MISSED DAY · NEXT FREE ONE IN ${streak.daysToNextFreeze} ${streak.daysToNextFreeze === 1 ? 'DAY' : 'DAYS'}`}
+            </Text>
+          </View>
+          <Button label={`${STREAK.freezeCost} coins`} variant="soft" size="sm" disabled={streak.freezes >= streak.maxFreezes || state.progress.coins < STREAK.freezeCost} onPress={buyFreeze} accessibilityLabel={`Buy a streak freeze for ${STREAK.freezeCost} coins`} />
+        </View>
+      </Card>
+
       <SectionHeading title="The last 7 days" />
       <View style={styles.week} accessibilityRole="list">
         {week.map((d) => {
@@ -71,7 +125,7 @@ export default function Journey() {
         })}
       </View>
       <Text variant="small" tone="muted">
-        A dash means no record for that day. Missed days never remove growth.
+        A dash means no record for that day. Missed days never remove growth. {streak.perfectDays} {streak.perfectDays === 1 ? 'day' : 'days'} with all three goals so far.
       </Text>
 
       <SectionHeading title="Next evolution" />
@@ -128,6 +182,13 @@ export default function Journey() {
 
 const styles = StyleSheet.create({
   metrics: { flexDirection: 'row', gap: spacing.md },
+  streakRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  flame: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSunken },
+  flameLit: { backgroundColor: colors.ink },
+  freezeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  freezeIcons: { flexDirection: 'row', gap: 4 },
+  freeze: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSunken },
+  freezeHeld: { backgroundColor: colors.sage },
   metric: { flex: 1, gap: 2 },
   week: { flexDirection: 'row', gap: 6 },
   day: {

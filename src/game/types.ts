@@ -74,9 +74,12 @@ export interface Prefs {
   reminderEnabled: boolean;
   reminderHour: number;
   reminderMinute: number;
+  /** Extra, state-aware nudges: a midday water nudge and a streak warning. */
+  nudgesEnabled: boolean;
   /** One-time UI flags. */
   coachMarkSeen: boolean;
   reviewRequested: boolean;
+  widgetPromptSeen: boolean;
 }
 
 export interface Progress {
@@ -86,6 +89,10 @@ export interface Progress {
   equippedGear: GearId;
   /** Days on which each goal earned its reward. Cannot be inflated by undo. */
   habitCounts: Record<GoalId, number>;
+  /** Streak freezes held. One is spent automatically on a missed day. */
+  streakFreezes: number;
+  /** Missed days that a freeze covered, so the streak reads through them. */
+  frozenDays: string[];
 }
 
 export interface TodayState {
@@ -126,6 +133,11 @@ export type GameEvent =
   | { type: 'waterAdded'; ml: number }
   | { type: 'waterUndone'; ml: number }
   | { type: 'dayRolled'; from: string; to: string }
+  /** Today became an active day and the streak grew to `streak`. */
+  | { type: 'streakExtended'; streak: number }
+  | { type: 'freezeEarned'; streak: number }
+  | { type: 'freezeUsed'; date: string }
+  | { type: 'streakLost'; previous: number }
   | { type: 'error'; code: ErrorCode; message: string };
 
 export type ErrorCode =
@@ -139,7 +151,8 @@ export type ErrorCode =
   | 'invalidMinutes'
   | 'invalidName'
   | 'noCustomGoal'
-  | 'invalidSteps';
+  | 'invalidSteps'
+  | 'freezeLimit';
 
 export interface OnboardingInput {
   petId: PetId;
@@ -166,6 +179,7 @@ export type GameAction =
   | { type: 'setWaterUnit'; unit: WaterUnit }
   | { type: 'updatePrefs'; patch: Partial<Prefs> }
   | { type: 'buyGear'; gear: GearId }
+  | { type: 'buyFreeze' }
   | { type: 'equipGear'; gear: GearId }
   | { type: 'reset' }
   /** Replace everything with a validated backup, then roll to today. */

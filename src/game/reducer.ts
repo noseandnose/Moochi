@@ -1,11 +1,14 @@
-import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, REWARDS } from './constants';
-import { dateKey } from './date';
+import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, REWARDS, STREAK } from './constants';
+import { dateKey, shiftDateKey } from './date';
 import {
+  countsForStreak,
   getCompletedCount,
   getDailyRecord,
   getStage,
+  isActiveDay,
   isGoalDone,
   isWaterDone,
+  streakEndingOn,
 } from './selectors';
 import { createInitialState, emptyDay } from './state';
 import type {
@@ -67,6 +70,8 @@ function reduceAction(state: GameState, action: GameAction): GameResult {
       return ok({ ...state, prefs: { ...state.prefs, ...action.patch } });
     case 'buyGear':
       return buyGear(state, action.gear);
+    case 'buyFreeze':
+      return buyFreeze(state);
     case 'equipGear':
       return equipGear(state, action.gear);
     case 'reset':
@@ -96,11 +101,38 @@ export function syncDay(state: GameState, now: number): GameResult {
   if (state.today.date === today) return ok(state);
   const events: GameEvent[] = [];
   let history = state.history;
+  let next = state;
   if (state.today.date && state.createdOn) {
     history = { ...history, [state.today.date]: getDailyRecord(state) };
     events.push({ type: 'dayRolled', from: state.today.date, to: today });
+    next = protectStreak(state, state.today.date, today, events);
   }
-  return ok({ ...state, history, today: emptyDay(today) }, events);
+  return ok({ ...next, history, today: emptyDay(today) }, events);
+}
+
+/**
+ * Walks the days that have just ended (from the outgoing day up to yesterday)
+ * and spends a freeze on each missed day while the streak is alive and a
+ * freeze is held. The first uncovered miss ends the streak.
+ */
+function protectStreak(state: GameState, from: string, today: string, events: GameEvent[]): GameState {
+  let next = state;
+  let d = from;
+  for (let guard = 0; guard < 400 && d < today; guard++, d = shiftDateKey(d, 1)) {
+    if (countsForStreak(next, d)) continue;
+    const alive = streakEndingOn(next, shiftDateKey(d, -1));
+    if (alive === 0) return next;
+    if (next.progress.streakFreezes <= 0) {
+      events.push({ type: 'streakLost', previous: alive });
+      return next;
+    }
+    next = {
+      ...next,
+      progress: { ...next.progress, streakFreezes: next.progress.streakFreezes - 1, frozenDays: [...next.progress.frozenDays, d].sort() },
+    };
+    events.push({ type: 'freezeUsed', date: d });
+  }
+  return next;
 }
 
 /* ----------------------------- onboarding ---------------------------- */
@@ -338,11 +370,20 @@ function evaluate(
     if (!before && dayLedger.allThree) out.push({ type: 'allGoalsCompleted' });
   }
 
-  const next: GameState = {
+  let next: GameState = {
     ...state,
     progress: { ...state.progress, xp, coins, habitCounts },
     ledger: { ...state.ledger, [date]: dayLedger },
   };
+  // Streak: today becomes an active day the first time any goal pays out.
+  if (!isActiveDay(state, date) && isActiveDay(next, date)) {
+    const streak = streakEndingOn(next, date);
+    out.push({ type: 'streakExtended', streak });
+    if (streak % STREAK.freezeEveryDays === 0 && next.progress.streakFreezes < STREAK.maxFreezes) {
+      next = { ...next, progress: { ...next.progress, streakFreezes: next.progress.streakFreezes + 1 } };
+      out.push({ type: 'freezeEarned', streak });
+    }
+  }
   const stageAfter = getStage(next);
   if (stageAfter !== stageBefore) out.push({ type: 'stageChanged', from: stageBefore, to: stageAfter });
   return ok(writeHistory(next), out);
@@ -373,6 +414,17 @@ function buyGear(state: GameState, gear: GameState['progress']['equippedGear']):
     { type: 'purchase', gear, cost: item.cost },
     { type: 'equipped', gear },
   ]);
+}
+
+function buyFreeze(state: GameState): GameResult {
+  if (state.progress.streakFreezes >= STREAK.maxFreezes) {
+    return fail(state, 'freezeLimit', `You can hold up to ${STREAK.maxFreezes} freezes.`);
+  }
+  if (state.progress.coins < STREAK.freezeCost) {
+    const short = STREAK.freezeCost - state.progress.coins;
+    return fail(state, 'insufficientCoins', `${short} more ${short === 1 ? 'coin' : 'coins'} for a streak freeze.`);
+  }
+  return ok({ ...state, progress: { ...state.progress, coins: state.progress.coins - STREAK.freezeCost, streakFreezes: state.progress.streakFreezes + 1 } });
 }
 
 function equipGear(state: GameState, gear: GameState['progress']['equippedGear']): GameResult {

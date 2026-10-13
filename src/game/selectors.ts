@@ -1,13 +1,14 @@
 import {
   ACHIEVEMENTS,
   ASLEEP_AFTER_HOURS,
+  STREAK,
   CHALLENGES,
   LEVEL_XP,
   PATH_STAGE_MIN,
   STAGES,
   STAGE_INDEX,
 } from './constants';
-import { dateKey, dateKeyToNumber, recentDateKeys } from './date';
+import { dateKey, dateKeyToNumber, recentDateKeys, shiftDateKey } from './date';
 import type { BonusId, DailyRecord, GameState, GoalId, HabitPath, PetMood, SelfieRecord, StageId } from './types';
 import { isWaterTargetReached, waterPercent } from './water';
 
@@ -213,6 +214,79 @@ export function getActiveDays(state: GameState): string[] {
     .filter(([, day]) => day.water || day.movement || day.eating)
     .map(([date]) => date)
     .sort();
+}
+
+/* ------------------------------- streaks ----------------------------- */
+
+/** Whether a day earned at least one of the three goal rewards. */
+export function isActiveDay(state: GameState, date: string): boolean {
+  const day = state.ledger[date];
+  return !!day && !!(day.water || day.movement || day.eating);
+}
+
+/** Whether a day counts toward the streak: active, or covered by a freeze. */
+export function countsForStreak(state: GameState, date: string): boolean {
+  return isActiveDay(state, date) || state.progress.frozenDays.includes(date);
+}
+
+/** Consecutive streak days ending on `date` (0 when `date` itself does not count). */
+export function streakEndingOn(state: GameState, date: string): number {
+  let n = 0;
+  let d = date;
+  while (countsForStreak(state, d)) {
+    n += 1;
+    d = shiftDateKey(d, -1);
+  }
+  return n;
+}
+
+export interface StreakInfo {
+  /** The live streak: includes today once today is active. */
+  current: number;
+  best: number;
+  todayActive: boolean;
+  /** A streak is alive from earlier days but today has not been earned yet. */
+  atRisk: boolean;
+  freezes: number;
+  maxFreezes: number;
+  /** Streak days until the next free freeze (0 when at the cap). */
+  daysToNextFreeze: number;
+  /** Days with all three goals done. */
+  perfectDays: number;
+}
+
+export function getStreakInfo(state: GameState, now: number): StreakInfo {
+  const today = dateKey(now);
+  const todayActive = isActiveDay(state, today);
+  const current = todayActive ? streakEndingOn(state, today) : streakEndingOn(state, shiftDateKey(today, -1));
+  const freezes = state.progress.streakFreezes;
+  return {
+    current,
+    best: Math.max(current, bestStreak(state)),
+    todayActive,
+    atRisk: !todayActive && current > 0,
+    freezes,
+    maxFreezes: STREAK.maxFreezes,
+    daysToNextFreeze: freezes >= STREAK.maxFreezes ? 0 : STREAK.freezeEveryDays - (current % STREAK.freezeEveryDays),
+    perfectDays: Object.values(state.ledger).filter((d) => d.allThree).length,
+  };
+}
+
+function bestStreak(state: GameState): number {
+  const days = new Set<string>(state.progress.frozenDays);
+  for (const [date, day] of Object.entries(state.ledger)) if (day.water || day.movement || day.eating) days.add(date);
+  let best = 0;
+  for (const d of days) {
+    if (days.has(shiftDateKey(d, -1))) continue; // not the start of a run
+    let n = 0;
+    let cur = d;
+    while (days.has(cur)) {
+      n += 1;
+      cur = shiftDateKey(cur, 1);
+    }
+    best = Math.max(best, n);
+  }
+  return best;
 }
 
 export interface WeekDay {

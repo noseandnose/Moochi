@@ -1,4 +1,4 @@
-import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, SCHEMA_VERSION } from './constants';
+import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, SCHEMA_VERSION, STREAK } from './constants';
 import { isDateKey } from './date';
 import type {
   DailyActivity,
@@ -34,13 +34,15 @@ export function createInitialState(): GameState {
       stepTarget: DEFAULTS.stepTarget,
       healthEnabled: false,
     },
-    prefs: { reduceMotion: false, haptics: true, sound: false, reminderEnabled: false, reminderHour: 19, reminderMinute: 30, coachMarkSeen: false, reviewRequested: false },
+    prefs: { reduceMotion: false, haptics: true, sound: false, reminderEnabled: false, reminderHour: 19, reminderMinute: 30, nudgesEnabled: true, coachMarkSeen: false, reviewRequested: false, widgetPromptSeen: false },
     progress: {
       xp: 0,
       coins: 0,
       ownedGear: ['none'],
       equippedGear: 'none',
       habitCounts: { water: 0, movement: 0, eating: 0 },
+      streakFreezes: 0,
+      frozenDays: [],
     },
     today: emptyDay(''),
     ledger: {},
@@ -186,8 +188,10 @@ function sanitizePrefs(raw: unknown, base: Prefs): Prefs {
     reminderEnabled: bool(p.reminderEnabled, base.reminderEnabled),
     reminderHour: Math.round(num(p.reminderHour, base.reminderHour, 0, 23)),
     reminderMinute: Math.round(num(p.reminderMinute, base.reminderMinute, 0, 59)),
+    nudgesEnabled: bool(p.nudgesEnabled, base.nudgesEnabled),
     coachMarkSeen: bool(p.coachMarkSeen, base.coachMarkSeen),
     reviewRequested: bool(p.reviewRequested, base.reviewRequested),
+    widgetPromptSeen: bool(p.widgetPromptSeen, base.widgetPromptSeen),
   };
 }
 
@@ -209,6 +213,8 @@ function sanitizeProgress(raw: unknown, base: Progress): Progress {
       movement: Math.floor(num(counts.movement, 0, 0, 1e6)),
       eating: Math.floor(num(counts.eating, 0, 0, 1e6)),
     },
+    streakFreezes: Math.floor(num(p.streakFreezes, 0, 0, STREAK.maxFreezes)),
+    frozenDays: Array.from(new Set((Array.isArray(p.frozenDays) ? p.frozenDays : []).filter(isDateKey))).sort(),
   };
 }
 

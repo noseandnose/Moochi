@@ -109,6 +109,14 @@ export default function Settings() {
         <ToggleRow label="Haptic feedback" hint="Subtle taps on completions and rewards." value={state.prefs.haptics} onChange={(v) => dispatch({ type: 'updatePrefs', patch: { haptics: v } })} />
       </Card>
 
+      <SectionHeading title="Home screen widget" />
+      <Card style={{ gap: spacing.sm }}>
+        <Text variant="small" tone="soft">
+          {state.profile.petName} on your home screen with today’s three goals. The fastest way back into a good day.
+        </Text>
+        <Button label="How to add the widget" variant="secondary" full onPress={() => router.push('/widget')} />
+      </Card>
+
       <SectionHeading title="Backup" />
       <BackupSettings onRestored={() => router.back()} />
 

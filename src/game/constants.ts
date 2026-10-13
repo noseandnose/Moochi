@@ -152,6 +152,22 @@ export const LEVEL_XP = 100;
 /** Hours without any interaction before the pet falls asleep. */
 export const ASLEEP_AFTER_HOURS = 36;
 
+/**
+ * Streaks: a day counts once any of the three goals earns its reward. A
+ * freeze covers one missed day; one is earned every seven streak days and
+ * they can also be bought with coins.
+ */
+export const STREAK = {
+  freezeEveryDays: 7,
+  maxFreezes: 2,
+  freezeCost: 60,
+  /** Local time for the midday water nudge and the evening streak warning. */
+  waterNudgeHour: 13,
+  waterNudgeMinute: 0,
+  streakWarningHour: 20,
+  streakWarningMinute: 30,
+} as const;
+
 export const ACHIEVEMENTS: { id: string; title: string; description: string }[] = [
   { id: 'firstStep', title: 'First step', description: 'Complete a daily goal' },
   { id: 'hatched', title: 'Hatched', description: 'Reach 100 XP' },
