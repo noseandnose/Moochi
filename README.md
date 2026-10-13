@@ -182,6 +182,10 @@ Not run (no simulator or device available in the build environment):
 - Local notifications, the document picker for restore, and the store review prompt (all stubbed on the web preview).
 - Apple Health and Health Connect reads, and both home screen widgets. These need a development build on a real device (HealthKit does not run in the simulator at all). The native configuration was verified through prebuild only; the read queries, the WidgetKit snapshot updates and the Android headless render have not been executed.
 
+## Deploying
+
+See `docs/DEPLOY.md` for the full runbook: accounts, EAS development builds, the on-device test checklist, store records, privacy and health declarations, screenshots, production builds, TestFlight and Play testing tracks (including Google's 12-tester closed-testing rule), and release day.
+
 ## Limitations
 
 - Sound effects are not implemented; the settings preference exists in the data model but there is no audio. Haptics and reduce-motion are implemented.

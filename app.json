@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#FAF9F6",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.mochi.habits",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
