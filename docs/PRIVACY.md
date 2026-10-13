@@ -47,4 +47,4 @@ If this policy changes, the updated version ships with the app and is dated at t
 
 ## Contact
 
-Questions: replace this line with your support email before publishing.
+Questions: [youchiapp@gmail.com](mailto:youchiapp@gmail.com)

@@ -33,6 +33,7 @@ footer { margin-top: 48px; font-size: 14px; color: #666B62; }
 def inline(text: str) -> str:
     text = html.escape(text, quote=False)
     text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', text)
     text = re.sub(r"_([^_]+)_", r"<em>\1</em>", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
     return text
@@ -114,7 +115,7 @@ YOUchi is a pocket habit game: three daily goals, a pixel pet that grows, no acc
 
 ## Contact
 
-Questions: replace this line with your support email before publishing.
+Questions: [youchiapp@gmail.com](mailto:youchiapp@gmail.com)
 """
 
 

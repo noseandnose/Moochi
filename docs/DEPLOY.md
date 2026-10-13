@@ -13,13 +13,12 @@ Done:
 
 Still to do, in order:
 
-1. Put a support email in `docs/PRIVACY.md` and `tools/site/pages.py` (both currently say "replace this line").
-2. Phase 0 accounts: Expo (free), Apple Developer ($99/year, a day or two to activate), Google Play ($25, identity verification takes days). Start these first; everything else waits on them.
-3. Phase 1: `eas init`, commit the project id.
-4. Phase 2: development builds and the on-device checklist. This is the first time widgets, Health, notifications, camera and keyboard run on a phone.
-5. Phase 3: store records, listings, privacy labels, health declarations, screenshots.
-6. Phase 4 and 5: production builds, TestFlight, Play internal testing, then Google's 14-day closed test with 12 testers (start recruiting them during Phase 2).
-7. Phase 6: release.
+1. Phase 0 accounts: Expo (free), Apple Developer ($99/year, a day or two to activate), Google Play ($25, identity verification takes days). Start these first; everything else waits on them.
+2. Phase 1: `eas init`, commit the project id.
+3. Phase 2: development builds and the on-device checklist. This is the first time widgets, Health, notifications, camera and keyboard run on a phone.
+4. Phase 3: store records, listings, privacy labels, health declarations, screenshots.
+5. Phase 4 and 5: production builds, TestFlight, Play internal testing, then Google's 14-day closed test with 12 testers (start recruiting them during Phase 2).
+6. Phase 6: release.
 
 ## Phase 0: accounts and tools (one afternoon)
 
@@ -110,7 +109,7 @@ Fix anything you find, push, and rebuild. Development builds only need a rebuild
 
 ## Phase 3: store records and the privacy policy (one hour)
 
-1. **Privacy policy URL.** Already live: https://noseandnose.github.io/youchi/privacy.html (rendered from `docs/PRIVACY.md` by the website build). Support page for the App Store's Support URL: https://noseandnose.github.io/youchi/support.html. Both pages end with a contact line that still says "replace this line with your support email": put a real address in `docs/PRIVACY.md` and `tools/site/pages.py` before submitting.
+1. **Privacy policy URL.** Already live: https://noseandnose.github.io/youchi/privacy.html (rendered from `docs/PRIVACY.md` by the website build). Support page for the App Store's Support URL: https://noseandnose.github.io/youchi/support.html. Both end with the support address, youchiapp@gmail.com.
 2. **App Store Connect**: https://appstoreconnect.apple.com → Apps → New App. Platform iOS, name YOUchi, primary language, bundle id `com.youchi.habits` (it appears in the list once the Phase 2 build registered it), SKU `youchi-ios`. Note the numeric Apple ID shown under General Information; that is `ascAppId`.
 3. **Google Play Console**: Create app → name YOUchi, app (not game), free. Package name is taken from the first upload.
 4. Fill both listings from `docs/STORE_LISTING.md`: description, subtitle / short description, keywords, category Health & Fitness, age rating questionnaire (no objectionable content, no user-generated content, no ads), contact email, privacy policy URL.

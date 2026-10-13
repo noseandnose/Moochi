@@ -33,6 +33,7 @@ Health & Fitness (primary), Lifestyle (secondary)
 ## Privacy
 - App Store privacy labels: Data Not Collected.
 - Play Data safety: no data collected, no data shared. Health Connect data access declaration required (reads Steps and Exercise to complete a daily goal on device).
+- Contact / support email: youchiapp@gmail.com
 - Privacy policy URL: https://noseandnose.github.io/youchi/privacy.html
 - Support URL (App Store) / website: https://noseandnose.github.io/youchi/support.html and https://noseandnose.github.io/youchi/
 - Marketing URL: https://noseandnose.github.io/youchi/
