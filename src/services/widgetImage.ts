@@ -44,11 +44,11 @@ export async function renderPetPng(state: GameState, scale = 3): Promise<string 
   const path = getVisualPath(state);
   const mood = getPetMood(state, Date.now());
   const cells = [moodCell(petId, stage, mood) ?? bodyCell(petId, stage, 0, stage === 'egg' ? 'open' : 'happy')];
-  if (path !== 'balanced') {
+  if (mood !== 'asleep' && path !== 'balanced') {
     const c = overlayCell(petId, stage, path);
     if (c) cells.push(c);
   }
-  if (state.progress.equippedGear !== 'none') {
+  if (mood !== 'asleep' && state.progress.equippedGear !== 'none') {
     const c = overlayCell(petId, stage, state.progress.equippedGear);
     if (c) cells.push(c);
   }

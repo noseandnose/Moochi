@@ -292,6 +292,8 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
 
   const overlays = useMemo(() => {
     const list: Cell[] = [];
+    // A sleeping pet has taken its gear off for the night.
+    if (mood === 'asleep') return list;
     if (path !== 'balanced') {
       const c = overlayCell(petId, stage, path);
       if (c) list.push(c);
@@ -301,7 +303,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
       if (c) list.push(c);
     }
     return list;
-  }, [petId, stage, path, gear]);
+  }, [petId, stage, path, gear, mood]);
 
   const clip = useMemo(() => rect(0, 0, size, size), [size]);
 
