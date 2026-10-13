@@ -70,6 +70,7 @@
   "overrides": {
     "react-native-health": {
       "@expo/config-plugins": "57.0.10"
-    }
+    },
+    "@expo/fingerprint": "0.20.14"
   }
 }
