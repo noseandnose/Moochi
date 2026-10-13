@@ -169,7 +169,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
     cancelAnimation(scaleY);
     cancelAnimation(ty);
     cancelAnimation(rot);
-    const lift = petId === 'drako' ? size * 0.2 : size * 0.14;
+    const lift = petId === 'juno' || petId === 'ori' ? size * 0.2 : size * 0.14;
     scaleX.value = withSequence(
       withTiming(1.14, { duration: 120 }),
       withTiming(0.92, { duration: 160 }),

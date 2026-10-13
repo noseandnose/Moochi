@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from pets import draw_foxi, draw_lumi, draw_drako
+from pets import DRAWERS, PETS, draw_fern
 from pixel import Canvas, upscale
 
 FONT = {
@@ -45,20 +45,24 @@ def build(assets: Path):
     upscale(logo("MOCHI"), 8).save(brand / "logo.png")
     upscale(logo("MOCHI", (250, 249, 246, 255)), 8).save(brand / "logo-light.png")
 
-    # Welcome trio for the share card and onboarding: all three teens side by side.
-    trio = Image.new("RGBA", (128 * 3 - 40, 128), (0, 0, 0, 0))
-    for i, fn in enumerate([draw_foxi, draw_lumi, draw_drako]):
+    # The whole cast side by side (README / social).
+    step = 96
+    cast = Image.new("RGBA", (step * (len(PETS) - 1) + 128, 128), (0, 0, 0, 0))
+    for i, pet in enumerate(PETS):
         c = Canvas()
-        fn(c, 2, 0, "open")
-        trio.alpha_composite(c.image(), (i * (128 - 20), 0))
-    trio.save(brand / "trio.png")
+        DRAWERS[pet](c, 2, 0, "open")
+        cast.alpha_composite(c.image(), (i * step, 0))
+    cast.save(brand / "cast.png")
+    old = brand / "trio.png"
+    if old.exists():
+        old.unlink()
 
-    # App icon: Foxi head on a sage tile.
+    # App icon: Fern on a sage tile.
     images = assets / "images"
     images.mkdir(parents=True, exist_ok=True)
     c = Canvas()
-    draw_foxi(c, 2, 0, "open", tail=False)
-    sprite = c.image().crop((20, 10, 108, 98))  # head and shoulders
+    draw_fern(c, 2, 0, "happy")
+    sprite = c.image().crop((20, 14, 108, 102))
     icon = Image.new("RGBA", (1024, 1024), "#8ea58d")
     big = sprite.resize((88 * 10, 88 * 10), Image.NEAREST)
     icon.alpha_composite(big, ((1024 - 880) // 2, (1024 - 880) // 2 + 20))

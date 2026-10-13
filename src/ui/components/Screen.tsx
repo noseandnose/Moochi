@@ -33,7 +33,7 @@ export function Screen({ title, subtitle, back, settings, headerRight, inTabs, k
       style={[styles.scroll, rest.style]}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + spacing.md, paddingBottom: (inTabs ? spacing.xl : insets.bottom + spacing.xl) + spacing.lg },
+        { paddingTop: insets.top + (inTabs ? spacing.sm : spacing.md), paddingBottom: (inTabs ? spacing.xl : insets.bottom + spacing.xl) + spacing.lg },
         contentContainerStyle,
       ]}
     >

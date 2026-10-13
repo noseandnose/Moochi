@@ -21,7 +21,7 @@ export function createInitialState(): GameState {
     schemaVersion: SCHEMA_VERSION,
     createdOn: null,
     profile: {
-      petId: 'foxi',
+      petId: 'tofu',
       petName: DEFAULTS.petName,
       gender: 'unspecified',
       waterUnit: 'ml',
@@ -102,7 +102,7 @@ export function sanitize(data: Record<string, unknown>): GameState {
   return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history };
 }
 
-const PET_IDS: PetId[] = ['foxi', 'lumi', 'drako'];
+const PET_IDS: PetId[] = ['tofu', 'juno', 'pebble', 'ori', 'fern'];
 const GENDERS: Gender[] = ['female', 'male', 'unspecified'];
 const UNITS: WaterUnit[] = ['ml', 'oz'];
 const REWARD_KEYS: RewardKey[] = ['water', 'movement', 'eating', 'bonus', 'allThree'];

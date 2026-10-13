@@ -7,7 +7,7 @@ export const DAY2 = new Date(2026, 9, 14, 8, 0, 0).getTime();
 export const DAY3 = new Date(2026, 9, 15, 8, 0, 0).getTime();
 
 export const INPUT: OnboardingInput = {
-  petId: 'foxi',
+  petId: 'tofu',
   petName: 'Pip',
   gender: 'female',
   waterUnit: 'ml',

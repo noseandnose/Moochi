@@ -9,7 +9,7 @@ from pets import DRAWERS, draw_egg, draw_overlay
 from pixel import Canvas, upscale
 
 out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("preview.png")
-pets = ["foxi", "lumi", "drako"]
+from pets import PETS as pets
 cols = 5
 sheet = Image.new("RGBA", (128 * cols, 128 * len(pets)), (240, 242, 235, 255))
 for r, pet in enumerate(pets):

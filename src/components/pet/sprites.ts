@@ -6,9 +6,11 @@ import { ATLAS, CELL, SHEET_SIZES } from '@/assets/atlas';
 export { CELL };
 
 export const SHEETS: Record<PetId, DataSourceParam> = {
-  foxi: require('../../../assets/sprites/foxi.png'),
-  lumi: require('../../../assets/sprites/lumi.png'),
-  drako: require('../../../assets/sprites/drako.png'),
+  tofu: require('../../../assets/sprites/tofu.png'),
+  juno: require('../../../assets/sprites/juno.png'),
+  pebble: require('../../../assets/sprites/pebble.png'),
+  ori: require('../../../assets/sprites/ori.png'),
+  fern: require('../../../assets/sprites/fern.png'),
 };
 
 export const SHEET_SIZE = SHEET_SIZES;

@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
 import { ProfileForm, defaultTargetFor } from '@/components/screens/ProfileForm';
-import { DEFAULTS, PET_BY_ID, type PetId } from '@/game';
+import { DEFAULTS, PETS, PET_BY_ID, type PetId } from '@/game';
 import { useHaptics } from '@/hooks/useHaptics';
 import { now } from '@/hooks/useNow';
 import { useGame } from '@/state/GameProvider';
@@ -10,7 +10,7 @@ import { Screen, Text, useToast } from '@/ui/components';
 
 export default function Goals() {
   const { pet } = useLocalSearchParams<{ pet?: string }>();
-  const petId: PetId = pet === 'lumi' || pet === 'drako' ? pet : 'foxi';
+  const petId: PetId = PETS.some((p) => p.id === pet) ? (pet as PetId) : 'tofu';
   const { dispatch } = useGame();
   const toast = useToast();
   const haptic = useHaptics();

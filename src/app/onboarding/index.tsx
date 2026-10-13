@@ -3,12 +3,13 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
 import { GoalIcon } from '@/components/icons';
+import { PetSprite } from '@/components/pet/PetSprite';
+import { PETS } from '@/game';
 import { Button, Screen, Text } from '@/ui/components';
 import { colors, radius, spacing } from '@/ui/theme';
 
 const logo = require('../../../assets/brand/logo.png');
-const trio = require('../../../assets/brand/trio.png');
-const forest = require('../../../assets/scenes/foxi_sky.png');
+const skyline = require('../../../assets/scenes/fern_sky.png');
 
 export default function Welcome() {
   const router = useRouter();
@@ -20,10 +21,16 @@ export default function Welcome() {
           Build habits. Level up.
         </Text>
       </View>
-      <View style={styles.hero} accessible accessibilityLabel="Foxi, Lumi and Drako standing together">
-        <Image source={forest} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <View style={styles.hero} accessible accessibilityLabel={`${PETS.map((p) => p.name).join(', ')} standing together`}>
+        <Image source={skyline} style={StyleSheet.absoluteFill} resizeMode="cover" />
         <View style={styles.ground} />
-        <Image source={trio} style={styles.trio} resizeMode="contain" />
+        <View style={styles.cast} pointerEvents="none">
+          {PETS.map((p, i) => (
+            <View key={p.id} style={{ marginLeft: i === 0 ? 0 : -14 }}>
+              <PetSprite petId={p.id} stage="teen" path="balanced" gear="none" size={82} animate={false} staticEyes={i === 2 ? 'happy' : 'open'} />
+            </View>
+          ))}
+        </View>
       </View>
       <Text variant="display" accessibilityRole="header">
         Build habits.{'\n'}Level up.
@@ -57,7 +64,7 @@ const styles = StyleSheet.create({
   brand: { gap: 2, marginBottom: spacing.sm },
   logo: { width: 132, height: 28 },
   hero: {
-    height: 190,
+    height: 170,
     borderRadius: radius.xl,
     overflow: 'hidden',
     backgroundColor: colors.surfaceSunken,
@@ -67,7 +74,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   ground: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 44, backgroundColor: '#cfd7c3' },
-  trio: { width: 300, height: 150, marginBottom: 6 },
+  cast: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 6 },
   steps: { gap: spacing.md, marginTop: spacing.sm },
   step: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   spacer: { flex: 1, minHeight: spacing.lg },

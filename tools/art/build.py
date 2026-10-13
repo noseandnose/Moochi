@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SPRITES = ROOT / "assets" / "sprites"
 ATLAS_TS = ROOT / "src" / "assets" / "atlas.ts"
 
-PETS = ["foxi", "lumi", "drako"]
+from pets import PETS
 STAGES = ["egg", "baby", "teen", "adult", "companion"]
 EGG_FRAMES = ["idle", "wobble_l", "wobble_r", "crack1", "crack2", "crack3"]
 MOTIONS = [0, 1, 2]
@@ -58,6 +58,9 @@ def build_sheet(pet: str):
         index[key] = [x, y]
     SPRITES.mkdir(parents=True, exist_ok=True)
     sheet.save(SPRITES / f"{pet}.png", optimize=True)
+    for old in SPRITES.glob("*.png"):
+        if old.stem not in PETS:
+            old.unlink()
     return index, sheet.size
 
 
@@ -73,7 +76,7 @@ def main():
         "export const CELL = 128;",
         "export type SheetKey = string;",
         "export const SHEET_SIZES = " + json.dumps(sizes) + " as const;",
-        "export const ATLAS: Record<'foxi' | 'lumi' | 'drako', Record<string, [number, number]>> = "
+        "export const ATLAS: Record<'tofu' | 'juno' | 'pebble' | 'ori' | 'fern', Record<string, [number, number]>> = "
         + json.dumps(atlas, separators=(",", ":"))
         + ";",
         "",

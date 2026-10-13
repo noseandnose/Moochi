@@ -12,23 +12,35 @@ import { Particles, type ParticlesHandle } from './Particles';
 import { PetSprite, type PetSpriteHandle } from './PetSprite';
 
 const SCENES: Record<PetId, { sky: number; far: number; near: number; ground: number }> = {
-  foxi: {
-    sky: require('../../../assets/scenes/foxi_sky.png'),
-    far: require('../../../assets/scenes/foxi_far.png'),
-    near: require('../../../assets/scenes/foxi_near.png'),
-    ground: require('../../../assets/scenes/foxi_ground.png'),
+  tofu: {
+    sky: require('../../../assets/scenes/tofu_sky.png'),
+    far: require('../../../assets/scenes/tofu_far.png'),
+    near: require('../../../assets/scenes/tofu_near.png'),
+    ground: require('../../../assets/scenes/tofu_ground.png'),
   },
-  lumi: {
-    sky: require('../../../assets/scenes/lumi_sky.png'),
-    far: require('../../../assets/scenes/lumi_far.png'),
-    near: require('../../../assets/scenes/lumi_near.png'),
-    ground: require('../../../assets/scenes/lumi_ground.png'),
+  juno: {
+    sky: require('../../../assets/scenes/juno_sky.png'),
+    far: require('../../../assets/scenes/juno_far.png'),
+    near: require('../../../assets/scenes/juno_near.png'),
+    ground: require('../../../assets/scenes/juno_ground.png'),
   },
-  drako: {
-    sky: require('../../../assets/scenes/drako_sky.png'),
-    far: require('../../../assets/scenes/drako_far.png'),
-    near: require('../../../assets/scenes/drako_near.png'),
-    ground: require('../../../assets/scenes/drako_ground.png'),
+  pebble: {
+    sky: require('../../../assets/scenes/pebble_sky.png'),
+    far: require('../../../assets/scenes/pebble_far.png'),
+    near: require('../../../assets/scenes/pebble_near.png'),
+    ground: require('../../../assets/scenes/pebble_ground.png'),
+  },
+  ori: {
+    sky: require('../../../assets/scenes/ori_sky.png'),
+    far: require('../../../assets/scenes/ori_far.png'),
+    near: require('../../../assets/scenes/ori_near.png'),
+    ground: require('../../../assets/scenes/ori_ground.png'),
+  },
+  fern: {
+    sky: require('../../../assets/scenes/fern_sky.png'),
+    far: require('../../../assets/scenes/fern_far.png'),
+    near: require('../../../assets/scenes/fern_near.png'),
+    ground: require('../../../assets/scenes/fern_ground.png'),
   },
 };
 

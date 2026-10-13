@@ -4,13 +4,29 @@
 
 MOCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Everything runs offline on the device: no account, no backend, no ads.
 
-| Welcome | Today | My pet | Journey |
-| --- | --- | --- | --- |
-| ![Welcome](docs/screenshots/welcome.png) | ![Today](docs/screenshots/today.png) | ![My pet](docs/screenshots/my-pet.png) | ![Journey](docs/screenshots/journey.png) |
+## The cast
 
-| Water | Evolution paths | Share card | Pets and stages |
+Five original pets in a chunky Tamagotchi-style pixel look, each with its own habitat, idle motion and growth details:
+
+| Pet | Character | Habitat | Signature motion |
 | --- | --- | --- | --- |
-| ![Water](docs/screenshots/water.png) | ![Evolution](docs/screenshots/evolution.png) | ![Share](docs/screenshots/share.png) | ![Pets](docs/screenshots/pets-stages.png) |
+| **Tofu** the cat | Curious. Playful. Independent. | Rooftops at dusk | Tail sway and an ear twitch |
+| **Juno** the owl | Calm. Watchful. Sharp. | Twilight pines | Wing lifts |
+| **Pebble** the axolotl | Easygoing. Patient. Resilient. | Pond with reeds and lily pads | Gill wiggle and tail sway |
+| **Ori** the penguin | Bold. Steady. Determined. | Snow coast with ice floes | Flipper flaps |
+| **Fern** the forest sprite | Gentle. Grounded. Growing. | Mushroom glade | Sprout sway |
+
+![Cast](assets/brand/cast.png)
+
+| Welcome | Choose a pet | Today | My pet |
+| --- | --- | --- | --- |
+| ![Welcome](docs/screenshots/welcome.png) | ![Choose](docs/screenshots/choose.png) | ![Today](docs/screenshots/today.png) | ![My pet](docs/screenshots/my-pet.png) |
+
+| Journey | Water | Evolution paths | Share card |
+| --- | --- | --- | --- |
+| ![Journey](docs/screenshots/journey.png) | ![Water](docs/screenshots/water.png) | ![Evolution](docs/screenshots/evolution.png) | ![Share](docs/screenshots/share.png) |
+
+![Stages](docs/screenshots/pets-stages.png)
 
 ## Stack
 
@@ -37,7 +53,7 @@ src/
 assets/
   sprites/         one sprite sheet per pet (bodies, eggs, path accents, gear overlays)
   scenes/          four habitat layers per pet (sky, far, near, ground)
-  brand/, images/  logo, icons, splash, onboarding trio
+  brand/, images/  logo, icons, splash, the cast line-up
   fonts/           Inter (OFL), subset to Latin, used only on the share card
 tools/art/         Python pixel-art generator that builds every asset above
 ```
@@ -107,7 +123,7 @@ Automated, run in this repository:
 - `npm test`: 51 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, bonus challenge, local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
-- Browser preview driven by Playwright at 390×844 and 320×568: fresh install through onboarding for all three pets, water quick-add and custom entry in ml and fl oz, undo, unit switching without drift, goal completion returning to Today with the reward banner, the egg hatch, undo from the detail screen, gear preview without spending, locked and insufficient states, the first purchase and equip, evolution previews for every pet, pet switching with preserved progress, share card generation, Journey history and achievements, settings validation and save, reduce-motion and haptic toggles, reset confirmation, and persistence across a page reload.
+- Browser preview driven by Playwright at 390×844, 375×667 and 320×568: fresh install through onboarding for the pets, water quick-add and custom entry in ml and fl oz, undo, unit switching without drift, goal completion returning to Today with the reward banner, the egg hatch, undo from the detail screen, gear preview without spending, locked and insufficient states, the first purchase and equip, evolution previews for every pet, pet switching with preserved progress, share card generation, Journey history and achievements, settings validation and save, reduce-motion and haptic toggles, reset confirmation, and persistence across a page reload.
 
 Not run (no simulator or device available in the build environment):
 
@@ -116,7 +132,7 @@ Not run (no simulator or device available in the build environment):
 ## Limitations
 
 - Sound effects are not implemented; the settings preference exists in the data model but there is no audio. Haptics and reduce-motion are implemented.
-- Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, but the three pets share one rendering style and 128×128 cells.
+- Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, and all five pets share one rendering style and 128×128 cells.
 - The web preview is for development only. It needs `npm run web:setup` (copies CanvasKit), and saving to Photos is unavailable there.
 - Progress from the MOCHI website does not transfer to the app; no import flow was built.
 - There is no cloud backup; deleting the app deletes progress.

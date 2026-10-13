@@ -13,7 +13,7 @@ export interface GoalCardProps {
   title: string;
   detail: string;
   done: boolean;
-  /** Reward line shown while not done, e.g. "25 XP · 5 coins". */
+  /** Short reward line, e.g. "25 XP · 5 coins". */
   reward: string;
   actionLabel: string;
   onAction: () => void;
@@ -21,6 +21,7 @@ export interface GoalCardProps {
   optional?: boolean;
 }
 
+/** One compact row per goal: icon, title + detail, and the action inline. */
 export function GoalCard({ kind, title, detail, done, reward, actionLabel, onAction, onOpen, optional }: GoalCardProps) {
   const reduce = useReduceMotion();
   const pulse = useSharedValue(1);
@@ -34,15 +35,15 @@ export function GoalCard({ kind, title, detail, done, reward, actionLabel, onAct
     <Animated.View style={[styles.card, done && styles.cardDone, style]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${title}${optional ? ', optional challenge' : ''}. ${detail}. ${done ? 'Completed today.' : 'Not completed yet.'}`}
+        accessibilityLabel={`${title}${optional ? ', optional challenge' : ''}. ${detail}. ${done ? 'Completed today.' : `Not completed yet. Reward ${reward}.`}`}
         accessibilityHint="Opens details"
         onPress={onOpen}
         style={({ pressed }) => [styles.body, pressed && { opacity: 0.8 }]}
       >
-        <GoalTile kind={kind} done={done} size={52} />
+        <GoalTile kind={kind} done={done} size={40} />
         <View style={styles.text}>
           <View style={styles.titleRow}>
-            <Text variant="subheading" numberOfLines={1} style={styles.title}>
+            <Text variant="bodyStrong" numberOfLines={1} style={styles.title}>
               {title}
             </Text>
             {optional ? (
@@ -51,48 +52,51 @@ export function GoalCard({ kind, title, detail, done, reward, actionLabel, onAct
               </Text>
             ) : null}
           </View>
-          <Text variant="small" tone="soft" numberOfLines={2}>
-            {detail}
-          </Text>
           {done ? (
             <View style={styles.doneRow}>
-              <Check size={14} color={colors.success} strokeWidth={3} />
-              <Text variant="smallStrong" tone="sage">
+              <Check size={13} color={colors.success} strokeWidth={3} />
+              <Text variant="small" tone="sage" numberOfLines={1}>
                 Completed today
               </Text>
             </View>
           ) : (
-            <Text variant="caption" tone="muted">
-              {reward}
+            <Text variant="small" tone="soft" numberOfLines={1}>
+              {detail}
             </Text>
           )}
         </View>
-        {done ? <ChevronRight size={20} color={colors.inkFaint} /> : null}
       </Pressable>
-      {!done ? (
-        <View style={styles.action}>
-          <Button label={actionLabel} size="sm" variant={kind === 'water' ? 'secondary' : 'primary'} onPress={onAction} accessibilityLabel={`${actionLabel}: ${title}`} />
-        </View>
-      ) : null}
+      {done ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Review ${title}`} onPress={onOpen} hitSlop={8} style={styles.chevron}>
+          <ChevronRight size={20} color={colors.inkFaint} />
+        </Pressable>
+      ) : (
+        <Button label={actionLabel} size="sm" variant={kind === 'water' ? 'secondary' : 'primary'} onPress={onAction} accessibilityLabel={`${actionLabel}: ${title}`} />
+      )}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: spacing.md,
-    gap: spacing.sm,
+    paddingVertical: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    minHeight: 62,
     ...shadow.card,
   },
   cardDone: { backgroundColor: colors.surfaceMuted, borderColor: colors.surfaceMuted, shadowOpacity: 0, elevation: 0 },
-  body: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  text: { flex: 1, gap: 2 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  body: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  text: { flex: 1, gap: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   title: { flexShrink: 1 },
-  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  action: { flexDirection: 'row', justifyContent: 'flex-end' },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  chevron: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });

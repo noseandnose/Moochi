@@ -108,13 +108,13 @@ export default function Today() {
   };
 
   const stageMeta = STAGES.find((s) => s.id === shownStage)!;
-  const caption = shownStage === 'egg' ? 'Complete goals to hatch your pet.' : 'Tap to interact.';
+  const caption = shownStage === 'egg' ? 'Complete goals to hatch' : 'Tap to interact';
 
   return (
-    <Screen title="Today" subtitle={formatLongDate(todayKey)} settings inTabs>
+    <Screen title="Today" subtitle={formatLongDate(todayKey)} settings inTabs contentContainerStyle={styles.content}>
       {banner ? <RewardBanner title={banner.title} xp={banner.xp} coins={banner.coins} onDismiss={() => setBanner(null)} /> : null}
       <View style={styles.petHeading}>
-        <Text variant="heading" accessibilityRole="header">
+        <Text variant="subheading" accessibilityRole="header">
           {state.profile.petName}
         </Text>
         <Pill label={`${coins} coins`} tone="coin" icon={<CoinIcon />} accessibilityLabel={`${state.progress.coins} coins`} />
@@ -125,7 +125,8 @@ export default function Today() {
         stage={shownStage}
         path={path}
         gear={state.progress.equippedGear}
-        height={236}
+        height={164}
+        petScale={1.0}
         onPress={onPetPress}
         accessibilityLabel={`${state.profile.petName}, ${stageMeta.name} stage, ${PATH_BY_ID[path].name} path${state.progress.equippedGear !== 'none' ? `, wearing ${GEAR_BY_ID[state.progress.equippedGear].name}` : ''}`}
       >
@@ -135,7 +136,7 @@ export default function Today() {
           </Text>
         </View>
         <View style={styles.caption} pointerEvents="none">
-          <Text variant="small" tone="soft">
+          <Text variant="caption" tone="soft">
             {caption}
           </Text>
         </View>
@@ -147,30 +148,27 @@ export default function Today() {
         style={({ pressed }) => [styles.growth, pressed && { opacity: 0.8 }]}
       >
         <View style={styles.growthRow}>
-          <Text variant="bodyStrong">{growth.isFinalStage ? `Level ${growth.level} · Companion` : `${growth.xpToNext} XP to ${growth.nextStageName}`}</Text>
+          <Text variant="smallStrong">{growth.isFinalStage ? `Level ${growth.level} · Companion` : `${growth.xpToNext} XP to ${growth.nextStageName}`}</Text>
           <View style={styles.link}>
-            <Text variant="smallStrong" tone="muted">
-              Journey
+            <Text variant="small" tone="muted">
+              {state.progress.xp} XP · Lv {growth.level}
             </Text>
             <ChevronRight size={16} color={colors.inkMuted} />
           </View>
         </View>
-        <ProgressBar value={growth.progress} label={`Growth progress toward ${growth.nextStageName ?? 'next level'}`} />
-        <Text variant="small" tone="muted">
-          {state.progress.xp} XP total · Level {growth.level}
-        </Text>
+        <ProgressBar value={growth.progress} height={7} label={`Growth progress toward ${growth.nextStageName ?? 'next level'}`} />
       </Pressable>
 
       <View style={styles.dailyHeader}>
         <View style={{ flex: 1 }}>
-          <Text variant="heading" accessibilityRole="header">
+          <Text variant="subheading" accessibilityRole="header">
             Daily goals
           </Text>
           <Text variant="small" tone="muted">
-            {completed === 3 ? 'All three done. Nice work.' : `${completed} of 3 complete`}
+            {completed === 3 ? 'All three done. Bonus earned.' : `${completed} of 3 done · 25 XP each · all three +25`}
           </Text>
         </View>
-        <Ring value={completed / 3} size={60} label={`${completed} of 3 daily goals complete`} caption={`${completed}/3`} color={completed === 3 ? colors.success : colors.ink} />
+        <Ring value={completed / 3} size={44} stroke={5} label={`${completed} of 3 daily goals complete`} caption={`${completed}/3`} color={completed === 3 ? colors.success : colors.ink} />
       </View>
 
       <GoalCard
@@ -214,14 +212,12 @@ export default function Today() {
         onAction={() => quickComplete('bonus')}
         onOpen={() => router.push('/(tabs)/today/goal/bonus')}
       />
-      <Text variant="small" tone="muted" align="center" style={{ marginTop: spacing.sm }}>
-        Complete all three goals for +25 XP and +5 coins. Missed days never remove progress.
-      </Text>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  content: { gap: 10 },
   petHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   stageLabel: {
     position: 'absolute',
@@ -234,16 +230,17 @@ const styles = StyleSheet.create({
   },
   caption: {
     position: 'absolute',
-    bottom: 10,
+    top: 14,
     right: 12,
     backgroundColor: 'rgba(255,254,250,0.85)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: radius.pill,
   },
   growth: {
-    gap: spacing.sm,
-    padding: spacing.lg,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -251,5 +248,5 @@ const styles = StyleSheet.create({
   },
   growthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   link: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  dailyHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm },
+  dailyHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: 2 },
 });

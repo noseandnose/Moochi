@@ -9,11 +9,11 @@ import { Button, Screen, Text } from '@/ui/components';
 export default function Choose() {
   const router = useRouter();
   const haptic = useHaptics();
-  const [selected, setSelected] = useState<PetId>('foxi');
+  const [selected, setSelected] = useState<PetId>('tofu');
   return (
     <Screen title="Choose your pet" subtitle="Step 1 of 2" back>
       <Text variant="body" tone="soft">
-        Three pets. Three personalities. You can switch later and keep your progress.
+        Five pets. Five personalities. You can switch later and keep your progress.
       </Text>
       <PetChoice
         selected={selected}

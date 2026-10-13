@@ -3,7 +3,7 @@
  * React Native imports so rules can be tested in isolation.
  */
 
-export type PetId = 'foxi' | 'lumi' | 'drako';
+export type PetId = 'tofu' | 'juno' | 'pebble' | 'ori' | 'fern';
 export type Gender = 'female' | 'male' | 'unspecified';
 export type WaterUnit = 'ml' | 'oz';
 export type GearId = 'none' | 'cap' | 'bow' | 'glasses' | 'scarf' | 'crown';
