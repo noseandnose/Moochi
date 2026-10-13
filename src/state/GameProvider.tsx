@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import {
   createInitialState,
+  fromDateKey,
   loadState,
   reduce,
   type GameAction,
@@ -19,6 +20,10 @@ interface GameContextValue {
   ready: boolean;
   /** True when the stored data could not be read and defaults were used. */
   recoveredFromCorruptData: boolean;
+  /** Days between the last recorded day and today at launch (0 when same day). */
+  returnGapDays: number;
+  /** Replace the whole state (backup restore). */
+  restore: (state: GameState) => void;
   dispatch: (action: GameAction) => GameEvent[];
   subscribe: (listener: Listener) => () => void;
 }
@@ -29,6 +34,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(createInitialState);
   const [ready, setReady] = useState(false);
   const [recovered, setRecovered] = useState(false);
+  const [returnGapDays, setReturnGapDays] = useState(0);
   const listeners = useRef(new Set<Listener>());
   // The latest committed state, kept in a ref so dispatch can be synchronous.
   const stateRef = useRef<GameState>(state);
@@ -57,8 +63,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setRecovered(true);
       }
       if (cancelled) return;
-      // Roll the day forward before the first render.
+      // Roll the day forward before the first render, remembering how long the player was away.
+      const before = next.today.date;
       next = reduce(next, { type: 'sync', now: Date.now() }).state;
+      if (next.createdOn && before && before !== next.today.date) {
+        const gap = Math.round((fromDateKey(next.today.date).getTime() - fromDateKey(before).getTime()) / 86_400_000);
+        setReturnGapDays(gap);
+      }
       stateRef.current = next;
       setState(next);
       setReady(true);
@@ -108,9 +119,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const restore = useCallback(
+    (next: GameState) => {
+      dispatch({ type: 'restore', state: next, now: Date.now() });
+    },
+    [dispatch],
+  );
+
   const value = useMemo<GameContextValue>(
-    () => ({ state, ready, recoveredFromCorruptData: recovered, dispatch, subscribe }),
-    [state, ready, recovered, dispatch, subscribe],
+    () => ({ state, ready, recoveredFromCorruptData: recovered, returnGapDays, dispatch, subscribe, restore }),
+    [state, ready, recovered, returnGapDays, dispatch, subscribe, restore],
   );
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }

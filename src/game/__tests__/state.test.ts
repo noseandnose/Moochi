@@ -70,6 +70,15 @@ describe('persistence and migrations', () => {
     expect(sanitize({}).schemaVersion).toBe(SCHEMA_VERSION);
   });
 
+  test('restore replaces the state with a backup and rolls it to today', () => {
+    const backup = grindDays(onboarded(), 2);
+    const live = reduce(createInitialState(), { type: 'restore', state: backup, now: DAY1 + 3 * 24 * 3600 * 1000 });
+    expect(live.state.progress).toEqual(backup.progress);
+    expect(live.state.today.date).toBe('2026-10-16');
+    expect(live.state.today.waterEntries).toHaveLength(0);
+    expect(Object.keys(live.state.history)).toEqual(['2026-10-13', '2026-10-14']);
+  });
+
   test('reset returns a pristine state', () => {
     const s = grindDays(onboarded(), 3);
     expect(reduce(s, { type: 'reset' }).state).toEqual(createInitialState());

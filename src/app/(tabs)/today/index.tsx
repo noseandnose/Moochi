@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CoinIcon } from '@/components/icons';
 import { BonusCarousel, type BonusTile } from '@/components/home/BonusCarousel';
+import { CoachMark } from '@/components/home/CoachMark';
 import { GoalCard } from '@/components/home/GoalCard';
 import { RewardBanner } from '@/components/home/RewardBanner';
 import { PetStage, type PetStageHandle } from '@/components/pet/PetStage';
@@ -36,8 +37,9 @@ import { colors, radius, spacing } from '@/ui/theme';
 
 export default function Today() {
   const router = useRouter();
-  const { state, dispatch } = useGame();
+  const { state, dispatch, returnGapDays } = useGame();
   const { pending, consume, queue } = useCelebration();
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const haptic = useHaptics();
   const todayKey = useTodayKey();
   const stageRef = useRef<PetStageHandle>(null);
@@ -157,6 +159,15 @@ export default function Today() {
   return (
     <Screen title="Today" subtitle={formatLongDate(todayKey)} settings inTabs contentContainerStyle={styles.content}>
       {banner ? <RewardBanner title={banner.title} xp={banner.xp} coins={banner.coins} onDismiss={() => setBanner(null)} /> : null}
+      {!banner && returnGapDays >= 2 && !welcomeDismissed ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Welcome back. Your pet kept everything. Dismiss." onPress={() => setWelcomeDismissed(true)} style={styles.welcome}>
+          <Text variant="bodyStrong">Welcome back.</Text>
+          <Text variant="small" tone="soft">
+            {returnGapDays} days away and {state.profile.petName} kept everything: XP, coins, gear. Today is a fresh start.
+          </Text>
+        </Pressable>
+      ) : null}
+      {!state.prefs.coachMarkSeen && !banner ? <CoachMark petName={state.profile.petName} onDismiss={() => dispatch({ type: 'updatePrefs', patch: { coachMarkSeen: true } })} /> : null}
       <View style={styles.petHeading}>
         <Text variant="subheading" accessibilityRole="header">
           {state.profile.petName}
@@ -252,6 +263,7 @@ export default function Today() {
 
 const styles = StyleSheet.create({
   content: { gap: 10 },
+  welcome: { gap: 2, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   petHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   stageLabel: {
     position: 'absolute',

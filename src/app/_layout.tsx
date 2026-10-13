@@ -9,6 +9,8 @@ import { isOnboarded } from '@/game';
 import { CelebrationProvider } from '@/state/CelebrationProvider';
 import { GameProvider, useGame } from '@/state/GameProvider';
 import { HealthSync } from '@/state/HealthSync';
+import { ReminderSync } from '@/state/ReminderSync';
+import { ReviewPrompt } from '@/state/ReviewPrompt';
 import { WidgetSync } from '@/state/WidgetSync';
 import { ToastProvider } from '@/ui/components';
 import { colors } from '@/ui/theme';
@@ -28,6 +30,8 @@ export default function RootLayout() {
             <StatusBar style="dark" />
             <HealthSync />
             <WidgetSync />
+            <ReminderSync />
+            <ReviewPrompt />
             <Routes />
           </ToastProvider>
         </CelebrationProvider>
@@ -48,6 +52,7 @@ function Routes() {
       <Stack.Protected guard={onboarded}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="settings" options={{ presentation: 'modal', gestureEnabled: true }} />
+        <Stack.Screen name="privacy" options={{ presentation: 'modal', gestureEnabled: true }} />
       </Stack.Protected>
       <Stack.Protected guard={!onboarded}>
         <Stack.Screen name="onboarding" />

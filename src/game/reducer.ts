@@ -60,6 +60,8 @@ export function reduce(state: GameState, action: GameAction): GameResult {
       return equipGear(state, action.gear);
     case 'reset':
       return ok(createInitialState());
+    case 'restore':
+      return syncDay(action.state, action.now);
   }
 }
 

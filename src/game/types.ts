@@ -68,6 +68,13 @@ export interface Prefs {
   reduceMotion: boolean;
   haptics: boolean;
   sound: boolean;
+  /** Daily local reminder notification. */
+  reminderEnabled: boolean;
+  reminderHour: number;
+  reminderMinute: number;
+  /** One-time UI flags. */
+  coachMarkSeen: boolean;
+  reviewRequested: boolean;
 }
 
 export interface Progress {
@@ -156,7 +163,9 @@ export type GameAction =
   | { type: 'updatePrefs'; patch: Partial<Prefs> }
   | { type: 'buyGear'; gear: GearId }
   | { type: 'equipGear'; gear: GearId }
-  | { type: 'reset' };
+  | { type: 'reset' }
+  /** Replace everything with a validated backup, then roll to today. */
+  | { type: 'restore'; state: GameState; now: number };
 
 export interface GameResult {
   state: GameState;

@@ -34,7 +34,7 @@ export function createInitialState(): GameState {
       stepTarget: DEFAULTS.stepTarget,
       healthEnabled: false,
     },
-    prefs: { reduceMotion: false, haptics: true, sound: false },
+    prefs: { reduceMotion: false, haptics: true, sound: false, reminderEnabled: false, reminderHour: 19, reminderMinute: 30, coachMarkSeen: false, reviewRequested: false },
     progress: {
       xp: 0,
       coins: 0,
@@ -181,6 +181,11 @@ function sanitizePrefs(raw: unknown, base: Prefs): Prefs {
     reduceMotion: bool(p.reduceMotion, base.reduceMotion),
     haptics: bool(p.haptics, base.haptics),
     sound: bool(p.sound, base.sound),
+    reminderEnabled: bool(p.reminderEnabled, base.reminderEnabled),
+    reminderHour: Math.round(num(p.reminderHour, base.reminderHour, 0, 23)),
+    reminderMinute: Math.round(num(p.reminderMinute, base.reminderMinute, 0, 59)),
+    coachMarkSeen: bool(p.coachMarkSeen, base.coachMarkSeen),
+    reviewRequested: bool(p.reviewRequested, base.reviewRequested),
   };
 }
 

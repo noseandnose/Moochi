@@ -129,6 +129,14 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 **Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/MochiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The widget shows the pet, name, stage and level, today's daily goal count, bonus count and XP to the next stage. It contains no habit details. Widgets need a development or store build.
 
+## Launch features
+
+- **Daily reminder** (Settings → Daily reminder): one local notification at a chosen time (presets or a custom 24-hour time). The body is re-scheduled after every change so it reflects today's remaining goals ("2 of 3 goals left today. Tofu is waiting."), or a neutral line for tomorrow once the time has passed. `expo-notifications`, local only, no push service.
+- **Backup and restore** (Settings → Backup): exports a JSON file containing the full game state plus progress photos (base64) through the share sheet; restore picks a file, validates it through the same sanitiser used at startup, writes the photos back and replaces the state after an explicit confirmation. Restoring then rolls the day to today.
+- **First-run coach mark** on Today, dismissed once; a **welcome-back card** after two or more days away that says progress was kept.
+- **Store review prompt**: requested once, a few seconds after the first evolution past hatching (teen stage), through the native in-app review API.
+- **Privacy**: an in-app Privacy screen (Settings → Privacy) and the full policy in `docs/PRIVACY.md`, ready to publish at a public URL for the store listings. `docs/STORE_LISTING.md` holds listing copy and the privacy declarations. `eas.json` has development, preview and production profiles.
+
 ## Game rules
 
 - Each of the three daily goals: 25 XP + 5 coins. All three in one day: +25 XP + 5 coins. Each of the three bonus tiles (selfie, challenge, custom goal): 20 XP + 4 coins.
@@ -144,7 +152,7 @@ Permissions declared in `app.json`: photo-library *add* access (share screen "Sa
 
 Automated, run in this repository:
 
-- `npm test`: 62 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, onboarding validation, pet switching and renaming.
+- `npm test`: 63 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, backup restore, onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
 - `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `MochiWidget` Swift file, the app group and the HealthKit entitlement.
@@ -153,6 +161,7 @@ Automated, run in this repository:
 Not run (no simulator or device available in the build environment):
 
 - iOS and Android device/simulator runs, including real haptics, the native share sheet, saving to Photos, the camera, Dynamic Type at the largest settings, and system Reduce Motion. The code paths exist and type-check, but they were only exercised on the web preview where they are stubbed or unavailable.
+- Local notifications, the document picker for restore, and the store review prompt (all stubbed on the web preview).
 - Apple Health and Health Connect reads, and both home screen widgets. These need a development build on a real device (HealthKit does not run in the simulator at all). The native configuration was verified through prebuild only; the read queries, the WidgetKit snapshot updates and the Android headless render have not been executed.
 
 ## Limitations
@@ -163,7 +172,7 @@ Not run (no simulator or device available in the build environment):
 - Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, and all five pets share one rendering style and 128×128 cells.
 - The web preview is for development only. It needs `npm run web:setup` (copies CanvasKit), and saving to Photos is unavailable there.
 - Progress from the MOCHI website does not transfer to the app; no import flow was built.
-- There is no cloud backup; deleting the app deletes progress.
+- There is no cloud sync. Deleting the app deletes progress unless a backup file was exported first.
 
 ## Licenses
 

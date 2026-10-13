@@ -3,7 +3,9 @@ import { X } from 'lucide-react-native';
 import React from 'react';
 import { Alert, Platform, StyleSheet, Switch, View } from 'react-native';
 
+import { BackupSettings } from '@/components/screens/BackupSettings';
 import { HealthSettings } from '@/components/screens/HealthSettings';
+import { ReminderSettings } from '@/components/screens/ReminderSettings';
 import { ProfileForm } from '@/components/screens/ProfileForm';
 import { useHaptics } from '@/hooks/useHaptics';
 import { now } from '@/hooks/useNow';
@@ -90,6 +92,9 @@ export default function Settings() {
         />
       </Card>
 
+      <SectionHeading title="Daily reminder" />
+      <ReminderSettings />
+
       <SectionHeading title="Steps and workouts" />
       <HealthSettings />
 
@@ -104,6 +109,9 @@ export default function Settings() {
         <ToggleRow label="Haptic feedback" hint="Subtle taps on completions and rewards." value={state.prefs.haptics} onChange={(v) => dispatch({ type: 'updatePrefs', patch: { haptics: v } })} />
       </Card>
 
+      <SectionHeading title="Backup" />
+      <BackupSettings onRestored={() => router.back()} />
+
       <SectionHeading title="Your data" />
       <Card tone="muted" elevated={false} style={{ gap: spacing.sm }}>
         <Text variant="small" tone="soft">
@@ -116,6 +124,7 @@ export default function Settings() {
           Water targets are editable starting points, not medical advice.
         </Text>
       </Card>
+      <Button label="Privacy" variant="secondary" full onPress={() => router.push('/privacy')} />
       <Button label="Reset all progress" variant="danger" full onPress={confirmReset} />
       <Text variant="small" tone="muted" align="center">
         MOCHI · Build habits. Level up.
