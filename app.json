@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mochi.habits",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "MOCHI reads your steps and workouts to complete your daily movement goal automatically.",
+        "NSHealthUpdateUsageDescription": "MOCHI does not write health data."
       }
     },
     "android": {
@@ -23,7 +25,11 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_EXERCISE"
+      ]
     },
     "web": {
       "output": "single",
@@ -50,7 +56,68 @@
           ]
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "MOCHI uses the camera for your daily progress selfie. Photos stay on this device.",
+          "photosPermission": "MOCHI lets you pick a progress selfie from your photos. Photos stay on this device."
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "MOCHI reads your steps and workouts to complete your daily movement goal automatically.",
+          "healthUpdatePermission": "MOCHI does not write health data."
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.mochi.habits",
+          "widgets": [
+            {
+              "name": "MochiWidget",
+              "displayName": "MOCHI",
+              "description": "Your pet and today's goals at a glance.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ]
+              }
+            }
+          ],
+          "bundleIdentifier": "com.mochi.habits.widgets"
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "MochiWidget",
+              "label": "MOCHI",
+              "description": "Your pet and today's goals at a glance.",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

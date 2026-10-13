@@ -8,6 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { isOnboarded } from '@/game';
 import { CelebrationProvider } from '@/state/CelebrationProvider';
 import { GameProvider, useGame } from '@/state/GameProvider';
+import { HealthSync } from '@/state/HealthSync';
+import { WidgetSync } from '@/state/WidgetSync';
 import { ToastProvider } from '@/ui/components';
 import { colors } from '@/ui/theme';
 
@@ -24,6 +26,8 @@ export default function RootLayout() {
         <CelebrationProvider>
           <ToastProvider>
             <StatusBar style="dark" />
+            <HealthSync />
+            <WidgetSync />
             <Routes />
           </ToastProvider>
         </CelebrationProvider>

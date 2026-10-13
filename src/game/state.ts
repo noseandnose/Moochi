@@ -1,6 +1,7 @@
 import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, SCHEMA_VERSION } from './constants';
 import { isDateKey } from './date';
 import type {
+  DailyActivity,
   DailyRecord,
   GameState,
   GearId,
@@ -11,6 +12,7 @@ import type {
   Profile,
   Progress,
   RewardKey,
+  SelfieRecord,
   TodayState,
   WaterEntry,
   WaterUnit,
@@ -28,6 +30,9 @@ export function createInitialState(): GameState {
       waterTargetMl: DEFAULTS.waterTargetUnspecifiedMl,
       movementMinutes: DEFAULTS.movementMinutes,
       eatingGoal: DEFAULTS.eatingGoal,
+      customGoal: DEFAULTS.customGoal,
+      stepTarget: DEFAULTS.stepTarget,
+      healthEnabled: false,
     },
     prefs: { reduceMotion: false, haptics: true, sound: false },
     progress: {
@@ -40,11 +45,22 @@ export function createInitialState(): GameState {
     today: emptyDay(''),
     ledger: {},
     history: {},
+    selfies: [],
   };
 }
 
 export function emptyDay(date: string): TodayState {
-  return { date, waterEntries: [], movementDone: false, eatingDone: false, bonusDone: false };
+  return {
+    date,
+    waterEntries: [],
+    movementDone: false,
+    movementSource: null,
+    eatingDone: false,
+    bonusDone: false,
+    selfieDone: false,
+    customDone: false,
+    activity: null,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -98,14 +114,15 @@ export function sanitize(data: Record<string, unknown>): GameState {
   const today = sanitizeToday(data.today);
   const ledger = sanitizeLedger(data.ledger);
   const history = sanitizeHistory(data.history);
+  const selfies = sanitizeSelfies(data.selfies);
   const createdOn = isDateKey(data.createdOn) ? data.createdOn : null;
-  return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history };
+  return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history, selfies };
 }
 
 const PET_IDS: PetId[] = ['tofu', 'juno', 'pebble', 'ori', 'fern'];
 const GENDERS: Gender[] = ['female', 'male', 'unspecified'];
 const UNITS: WaterUnit[] = ['ml', 'oz'];
-const REWARD_KEYS: RewardKey[] = ['water', 'movement', 'eating', 'bonus', 'allThree'];
+const REWARD_KEYS: RewardKey[] = ['water', 'movement', 'eating', 'bonus', 'selfie', 'custom', 'allThree'];
 
 function obj(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -152,6 +169,9 @@ function sanitizeProfile(raw: unknown, base: Profile): Profile {
       num(p.movementMinutes, base.movementMinutes, DEFAULTS.minMovementMinutes, DEFAULTS.maxMovementMinutes),
     ),
     eatingGoal: str(p.eatingGoal, base.eatingGoal, DEFAULTS.maxEatingGoalLength),
+    customGoal: typeof p.customGoal === 'string' ? p.customGoal.trim().slice(0, DEFAULTS.maxCustomGoalLength) : '',
+    stepTarget: Math.round(num(p.stepTarget, base.stepTarget, DEFAULTS.minStepTarget, DEFAULTS.maxStepTarget)),
+    healthEnabled: bool(p.healthEnabled, false),
   };
 }
 
@@ -196,13 +216,40 @@ function sanitizeToday(raw: unknown): TodayState {
       if (Number.isFinite(ml)) entries.push({ ml, at: Math.floor(num(entry.at, 0, 0)) });
     }
   }
+  const activityRaw = obj(t.activity);
+  const activity: DailyActivity | null =
+    t.activity && typeof t.activity === 'object'
+      ? {
+          steps: Math.floor(num(activityRaw.steps, 0, 0, 1e7)),
+          workoutMinutes: Math.floor(num(activityRaw.workoutMinutes, 0, 0, 1e5)),
+          syncedAt: Math.floor(num(activityRaw.syncedAt, 0, 0)),
+        }
+      : null;
+  const movementDone = bool(t.movementDone, false);
   return {
     date,
     waterEntries: entries,
-    movementDone: bool(t.movementDone, false),
+    movementDone,
+    movementSource: movementDone ? oneOf(t.movementSource, ['manual', 'health'] as const, 'manual') : null,
     eatingDone: bool(t.eatingDone, false),
     bonusDone: bool(t.bonusDone, false),
+    selfieDone: bool(t.selfieDone, false),
+    customDone: bool(t.customDone, false),
+    activity,
   };
+}
+
+function sanitizeSelfies(raw: unknown): SelfieRecord[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SelfieRecord[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const r = obj(item);
+    if (!isDateKey(r.date) || typeof r.file !== 'string' || !r.file.length || seen.has(r.date)) continue;
+    seen.add(r.date);
+    out.push({ date: r.date, file: r.file.slice(0, 120), at: Math.floor(num(r.at, 0, 0)) });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function sanitizeLedger(raw: unknown): Ledger {
@@ -227,6 +274,8 @@ function sanitizeHistory(raw: unknown): Record<string, DailyRecord> {
       movement: bool(day.movement, false),
       eating: bool(day.eating, false),
       bonus: bool(day.bonus, false),
+      selfie: bool(day.selfie, false),
+      custom: bool(day.custom, false),
     };
   }
   return out;

@@ -1,12 +1,19 @@
-import type { GearId, GoalId, HabitPath, PetId, StageId } from './types';
+import type { BonusId, GearId, GoalId, HabitPath, PetId, StageId } from './types';
 
 export const SCHEMA_VERSION = 1;
 
 export const REWARDS = {
   goal: { xp: 25, coins: 5 },
   allThree: { xp: 25, coins: 5 },
+  /** Each of the three bonus tiles (selfie, challenge, custom goal). */
   bonus: { xp: 20, coins: 4 },
 } as const;
+
+export const BONUSES: { id: BonusId; title: string; blurb: string }[] = [
+  { id: 'selfie', title: 'Progress selfie', blurb: 'One photo a day. Watch yourself change.' },
+  { id: 'bonus', title: 'Daily challenge', blurb: 'A small extra that changes every day.' },
+  { id: 'custom', title: 'Your goal', blurb: 'A daily goal in your own words.' },
+];
 
 export const STAGES: { id: StageId; name: string; xp: number }[] = [
   { id: 'egg', name: 'Egg', xp: 0 },
@@ -125,6 +132,11 @@ export const DEFAULTS = {
   waterTargetUnspecifiedMl: 2500,
   movementMinutes: 30,
   eatingGoal: 'Eat a balanced meal',
+  customGoal: '',
+  stepTarget: 8000,
+  minStepTarget: 1000,
+  maxStepTarget: 50000,
+  maxCustomGoalLength: 60,
   maxPetNameLength: 20,
   maxEatingGoalLength: 90,
   minMovementMinutes: 1,

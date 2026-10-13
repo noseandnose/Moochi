@@ -2,7 +2,7 @@
 
 **Build habits. Level up.**
 
-MOCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Everything runs offline on the device: no account, no backend, no ads.
+MOCHI is a pocket habit game for iOS and Android. Complete three real-world goals a day (drink water, move, eat well), add up to three bonuses (a progress selfie, the daily challenge, your own goal), earn XP and coins, watch a pixel pet grow through five stages, and unlock gear. Movement can complete itself from Apple Health or Health Connect, and a home screen widget keeps the pet and today's count in view. Everything runs offline on the device: no account, no backend, no ads.
 
 ## The cast
 
@@ -26,6 +26,14 @@ Five original pets in a chunky Tamagotchi-style pixel look, each with its own ha
 | --- | --- | --- | --- |
 | ![Journey](docs/screenshots/journey.png) | ![Water](docs/screenshots/water.png) | ![Evolution](docs/screenshots/evolution.png) | ![Share](docs/screenshots/share.png) |
 
+| Bonus tiles | Progress selfies | Custom goal | Health settings |
+| --- | --- | --- | --- |
+| ![Bonus](docs/screenshots/today-egg.png) | ![Progress](docs/screenshots/progress.png) | ![Custom goal](docs/screenshots/custom-goal.png) | ![Settings](docs/screenshots/settings.png) |
+
+Gear and evolution paths on every pet (teen and adult rows):
+
+![Gear and paths](docs/screenshots/gear-and-paths.png)
+
 ![Stages](docs/screenshots/pets-stages.png)
 
 ## Stack
@@ -34,7 +42,9 @@ Five original pets in a chunky Tamagotchi-style pixel look, each with its own ha
 - `@shopify/react-native-skia` renders the pixel art with nearest-neighbour sampling so edges stay crisp at any size, and renders the share card.
 - `react-native-reanimated` drives sprite transforms, progress bars and rings on the UI thread.
 - `@react-native-async-storage/async-storage` for durable local persistence (versioned schema, migrations, corrupt-data recovery).
-- `expo-haptics`, `expo-sharing`, `expo-file-system`, `expo-media-library` for feedback and sharing.
+- `expo-haptics`, `expo-sharing`, `expo-file-system`, `expo-media-library`, `expo-image-picker` for feedback, sharing and progress selfies.
+- `react-native-health` (Apple Health) and `react-native-health-connect` (Android Health Connect) read steps and workouts.
+- `expo-widgets` (iOS, WidgetKit) and `react-native-android-widget` (Android) for the home screen widget.
 - `lucide-react-native` + `react-native-svg` for interface icons.
 
 All game rules live in `src/game` as pure TypeScript with no React Native imports, so rewards, rollover, units, purchases and progression are unit-tested in isolation.
@@ -46,7 +56,9 @@ src/
   game/            pure game logic: types, constants, reducer, selectors, water units, persistence sanitiser, tests
   state/           GameProvider (hydration, persistence, date re-sync), CelebrationProvider (reward presentation)
   components/pet/  Skia sprite renderer, habitat stage, particles, gear grid
-  components/      goal cards, reward banner, share card, shared screens (profile form, pet choice, evolution paths)
+  components/      goal cards, bonus carousel, reward banner, share card, shared screens (profile form, pet choice, evolution paths, health settings)
+  services/        health (Apple Health / Health Connect), selfies (private file storage), widget sync and the Skia pet renderer
+  widgets/         iOS widget (expo-widgets, SwiftUI via @expo/ui) and Android widget (react-native-android-widget) plus its task handler
   ui/              design tokens and typed primitives (Text, Button, Card, Field, Segmented, Ring, Toast...)
   app/             Expo Router routes: onboarding/, (tabs)/today, (tabs)/pet, (tabs)/journey, settings (modal)
   assets/atlas.ts  generated sprite-sheet lookup
@@ -67,7 +79,7 @@ npm install
 npx expo start            # scan the QR code with Expo Go, or press i / a for a simulator
 ```
 
-Every native module used here is bundled in Expo Go (SDK 57), so no development build is required to try the app. For a development build or local native run:
+The core game runs in Expo Go. Three features need a development build because their native modules are not part of Expo Go: Apple Health / Health Connect sync, and the iOS and Android home screen widgets. In Expo Go those features degrade gracefully (health shows as unavailable in Settings, widget sync is skipped). For a development build or local native run:
 
 ```bash
 npx expo run:ios          # requires Xcode on macOS
@@ -103,11 +115,23 @@ eas submit --platform android                     # Google Play
 
 Local builds without EAS: `npx expo prebuild` generates the `ios/` and `android/` projects, then open them in Xcode or Android Studio (or run `npx expo run:ios --configuration Release` / `npx expo run:android --variant release`).
 
-Permissions declared in `app.json`: photo-library *add* access (only used by "Save image" on the share screen) and vibration for haptics. Nothing else is requested.
+Permissions declared in `app.json`: photo-library *add* access (share screen "Save image"), camera and photo-library *read* access (progress selfie), HealthKit read access on iOS and `READ_STEPS` / `READ_EXERCISE` for Health Connect on Android, and vibration for haptics. Each is requested only when the feature is first used.
+
+## Bonuses, health and the widget
+
+**Three bonus tiles** sit under the daily goals in a swipeable row (Today). Each earns 20 XP and 4 coins once per local day and never affects the evolution path:
+
+1. **Progress selfie**: take or pick one photo a day. Photos are copied into the app's private documents directory; only the file name is stored in game state. The Progress screen shows a first-vs-latest comparison and a grid of all photos, each deletable. Selfies are never part of the share card.
+2. **Daily challenge**: the rotating challenge, as before.
+3. **Your goal**: a goal in your own words (set from the tile or in Settings). Clearing the text hides the tile's check-in; an earned reward stays.
+
+**Health sync** (Settings → Steps and workouts): on iOS it reads steps and workouts from Apple Health via HealthKit; on Android from Health Connect. When enabled, the app reads today's totals on launch, on every return to the foreground and every five minutes, and the movement goal completes itself when workout minutes reach your movement target or steps reach your step target (default 8,000, editable). Completion comes with the usual reward and celebration, exactly once per day. A manual check-in is never downgraded, and nothing is written to the health platforms. Android builds set `minSdkVersion` 26 as Health Connect requires; a Play Store release additionally needs the Health Connect data-access declaration in the Play Console.
+
+**Home screen widget**: iOS uses `expo-widgets` (a WidgetKit extension; the layout in `src/widgets/MochiWidget.tsx` is written with `@expo/ui` SwiftUI components and shipped inside the app). Android uses `react-native-android-widget` with a headless task handler registered in `src/boot.android.ts`. After any state change the app renders the current pet (with path accents and gear) to a PNG through an offscreen Skia surface, stores it in the shared app-group directory (iOS) or as a data URL alongside the snapshot (Android), and pushes a new snapshot. The widget shows the pet, name, stage and level, today's daily goal count, bonus count and XP to the next stage. It contains no habit details. Widgets need a development or store build.
 
 ## Game rules
 
-- Each of the three daily goals: 25 XP + 5 coins. All three in one day: +25 XP + 5 coins. Optional daily challenge: 20 XP + 4 coins.
+- Each of the three daily goals: 25 XP + 5 coins. All three in one day: +25 XP + 5 coins. Each of the three bonus tiles (selfie, challenge, custom goal): 20 XP + 4 coins.
 - Rewards are recorded in a per-day ledger keyed by the device's local calendar date, so taps, restarts, undo/redo and navigation can never award twice. Undo updates the day's record but never revokes rewards or lets them be re-earned.
 - Stages: Egg 0, Baby 100, Teen 400, Adult 1,000, Companion 2,500 XP. After Companion the level keeps rising (`floor(XP / 100) + 1`). Missed days never remove anything.
 - From the teen stage the pet's look follows the leading habit (Hydration, Active, Nourished) using per-goal reward counts; ties are Balanced. Counts cannot be inflated by undo.
@@ -120,18 +144,22 @@ Permissions declared in `app.json`: photo-library *add* access (only used by "Sa
 
 Automated, run in this repository:
 
-- `npm test`: 51 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, bonus challenge, local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, onboarding validation, pet switching and renaming.
+- `npm test`: 62 Jest tests over water units and rounding, exactly-once rewards, undo without farming, the all-three bonus, the three bonus tiles (selfie once per day, retakes, removal, custom goal validation and clearing, stacking), health activity (recording with sync off, workout and step thresholds, no downgrade of manual check-ins, settings changes, day reset), local-day rollover and resume, every stage threshold, final-stage levelling, path ties and leaders, counters under undo/redo, achievements on non-consecutive days, seven-day history with dashes, gear purchase / insufficient coins / double purchase / equip, persistence round-trip, corrupt and partial data recovery, migration chain, reset, onboarding validation, pet switching and renaming.
 - `npm run typecheck`, `npm run lint`, `npm run doctor`: all clean.
 - `npx expo export --platform ios --platform android`: Hermes bundles build for both platforms.
+- `npx expo prebuild` for both platforms: the generated Android manifest contains the widget receiver, Health Connect rationale activity and health permissions; the generated iOS project contains the `ExpoWidgetsTarget` extension with the `MochiWidget` Swift file, the app group and the HealthKit entitlement.
 - Browser preview driven by Playwright at 390×844, 375×667 and 320×568: fresh install through onboarding for the pets, water quick-add and custom entry in ml and fl oz, undo, unit switching without drift, goal completion returning to Today with the reward banner, the egg hatch, undo from the detail screen, gear preview without spending, locked and insufficient states, the first purchase and equip, evolution previews for every pet, pet switching with preserved progress, share card generation, Journey history and achievements, settings validation and save, reduce-motion and haptic toggles, reset confirmation, and persistence across a page reload.
 
 Not run (no simulator or device available in the build environment):
 
-- iOS and Android device/simulator runs, including real haptics, the native share sheet, saving to Photos, Dynamic Type at the largest settings, and system Reduce Motion. The code paths exist and type-check, but they were only exercised on the web preview where they are stubbed or unavailable.
+- iOS and Android device/simulator runs, including real haptics, the native share sheet, saving to Photos, the camera, Dynamic Type at the largest settings, and system Reduce Motion. The code paths exist and type-check, but they were only exercised on the web preview where they are stubbed or unavailable.
+- Apple Health and Health Connect reads, and both home screen widgets. These need a development build on a real device (HealthKit does not run in the simulator at all). The native configuration was verified through prebuild only; the read queries, the WidgetKit snapshot updates and the Android headless render have not been executed.
 
 ## Limitations
 
 - Sound effects are not implemented; the settings preference exists in the data model but there is no audio. Haptics and reduce-motion are implemented.
+- Health sync and widgets are untested on devices (see Verification). `react-native-health` is a legacy bridge module that runs through the New Architecture interop layer; if a device build reports issues there, `@kingstinct/react-native-healthkit` is the drop-in alternative behind the same `src/services/health.ts` interface.
+- The widget image omits animation and shows the happy frame; it refreshes when the app runs, plus the periodic system refresh (30 minutes on Android).
 - Pixel art is generated programmatically (`tools/art`) rather than hand-painted. Stages differ in proportion, parts and details, and all five pets share one rendering style and 128×128 cells.
 - The web preview is for development only. It needs `npm run web:setup` (copies CanvasKit), and saving to Photos is unavailable there.
 - Progress from the MOCHI website does not transfer to the app; no import flow was built.

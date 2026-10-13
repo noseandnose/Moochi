@@ -89,7 +89,7 @@ describe('rewards ledger', () => {
     expect(day2.state.today.waterEntries).toHaveLength(0);
     expect(day2.state.today.date).toBe('2026-10-14');
     expect(day2.state.progress.xp).toBe(75);
-    expect(day2.state.history['2026-10-13']).toEqual({ water: true, movement: true, eating: false, bonus: false });
+    expect(day2.state.history['2026-10-13']).toEqual({ water: true, movement: true, eating: false, bonus: false, selfie: false, custom: false });
     expect(day2.state.ledger['2026-10-13']).toEqual({ water: true, movement: true });
     expect(day2.state.ledger['2026-10-14']).toEqual({ movement: true });
   });
@@ -105,8 +105,12 @@ describe('rewards ledger', () => {
       date: '2026-10-14',
       waterEntries: [],
       movementDone: false,
+      movementSource: null,
       eatingDone: false,
       bonusDone: false,
+      selfieDone: false,
+      customDone: false,
+      activity: null,
     });
   });
 

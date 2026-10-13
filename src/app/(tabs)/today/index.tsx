@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CoinIcon } from '@/components/icons';
+import { BonusCarousel, type BonusTile } from '@/components/home/BonusCarousel';
 import { GoalCard } from '@/components/home/GoalCard';
 import { RewardBanner } from '@/components/home/RewardBanner';
 import { PetStage, type PetStageHandle } from '@/components/pet/PetStage';
@@ -12,8 +13,10 @@ import {
   PATH_BY_ID,
   STAGES,
   formatWater,
+  getBonusCount,
   getCompletedCount,
   getDailyChallenge,
+  getTodaySelfie,
   getGrowth,
   getStage,
   getVisualPath,
@@ -22,6 +25,8 @@ import {
   type StageId,
 } from '@/game';
 import { useAnimatedNumber } from '@/hooks/useCounter';
+import { useSelfie } from '@/hooks/useSelfie';
+import { selfieUri } from '@/services/selfies';
 import { useHaptics } from '@/hooks/useHaptics';
 import { formatLongDate, useTodayKey, now } from '@/hooks/useNow';
 import { summarizeRewards, useCelebration } from '@/state/CelebrationProvider';
@@ -48,6 +53,13 @@ export default function Today() {
   const completed = getCompletedCount(state);
   const waterDone = isWaterDone(state);
   const challenge = getDailyChallenge(state.today.date || todayKey);
+  const selfie = useSelfie();
+  const todaySelfie = getTodaySelfie(state);
+  const activity = state.today.activity;
+  const movementDetail =
+    state.profile.healthEnabled && activity
+      ? `${activity.steps.toLocaleString()} steps · ${activity.workoutMinutes} min workout · goal ${state.profile.movementMinutes} min`
+      : `${state.profile.movementMinutes} minutes of movement`;
 
   // Present queued celebrations: banner, pet reaction, hatch / evolution.
   useEffect(() => {
@@ -95,12 +107,44 @@ export default function Today() {
   }, [banner]);
 
   const quickComplete = useCallback(
-    (goal: 'movement' | 'eating' | 'bonus') => {
+    (goal: 'movement' | 'eating' | 'bonus' | 'custom') => {
       const events = dispatch({ type: 'setCheckIn', goal, done: true, now: now() });
       queue(events);
     },
     [dispatch, queue],
   );
+
+  const bonusTiles: BonusTile[] = [
+    {
+      id: 'selfie',
+      title: 'Progress selfie',
+      detail: 'One photo a day. Watch yourself change.',
+      done: state.today.selfieDone,
+      actionLabel: 'Take selfie',
+      onAction: selfie.start,
+      onOpen: () => router.push('/(tabs)/today/progress'),
+      imageUri: todaySelfie ? selfieUri(todaySelfie.file) : undefined,
+    },
+    {
+      id: 'bonus',
+      title: 'Daily challenge',
+      detail: challenge,
+      done: state.today.bonusDone,
+      actionLabel: 'Done',
+      onAction: () => quickComplete('bonus'),
+      onOpen: () => router.push('/(tabs)/today/goal/bonus'),
+    },
+    {
+      id: 'custom',
+      title: state.profile.customGoal ? 'Your goal' : 'Your own goal',
+      detail: state.profile.customGoal || 'Add a daily goal in your own words.',
+      done: state.today.customDone,
+      actionLabel: state.profile.customGoal ? 'Done' : 'Set goal',
+      needsSetup: !state.profile.customGoal,
+      onAction: () => (state.profile.customGoal ? quickComplete('custom') : router.push('/(tabs)/today/goal/custom')),
+      onOpen: () => router.push('/(tabs)/today/goal/custom'),
+    },
+  ];
 
   const onPetPress = () => {
     haptic('tap');
@@ -184,7 +228,7 @@ export default function Today() {
       <GoalCard
         kind="movement"
         title="Move your body"
-        detail={`${state.profile.movementMinutes} minutes of movement`}
+        detail={movementDetail}
         done={state.today.movementDone}
         reward="25 XP · 5 coins"
         actionLabel="Done"
@@ -201,17 +245,7 @@ export default function Today() {
         onAction={() => quickComplete('eating')}
         onOpen={() => router.push('/(tabs)/today/goal/eating')}
       />
-      <GoalCard
-        kind="bonus"
-        title="Daily challenge"
-        detail={challenge}
-        done={state.today.bonusDone}
-        reward="20 XP · 4 coins"
-        actionLabel="Done"
-        optional
-        onAction={() => quickComplete('bonus')}
-        onOpen={() => router.push('/(tabs)/today/goal/bonus')}
-      />
+      <BonusCarousel tiles={bonusTiles} doneCount={getBonusCount(state)} />
     </Screen>
   );
 }

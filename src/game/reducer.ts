@@ -9,12 +9,14 @@ import {
 } from './selectors';
 import { createInitialState, emptyDay } from './state';
 import type {
+  BonusId,
   ErrorCode,
   GameAction,
   GameEvent,
   GameResult,
   GameState,
   GoalId,
+  MovementSource,
   OnboardingInput,
   RewardKey,
 } from './types';
@@ -36,6 +38,12 @@ export function reduce(state: GameState, action: GameAction): GameResult {
       return undoWater(state, action.now);
     case 'setCheckIn':
       return setCheckIn(state, action.goal, action.done, action.now);
+    case 'recordSelfie':
+      return recordSelfie(state, action.file, action.now);
+    case 'removeSelfie':
+      return removeSelfie(state, action.date, action.now);
+    case 'recordActivity':
+      return recordActivity(state, action.steps, action.workoutMinutes, action.now);
     case 'selectPet':
       return ok({ ...state, profile: { ...state.profile, petId: action.petId } });
     case 'renamePet':
@@ -93,6 +101,7 @@ function completeOnboarding(state: GameState, input: OnboardingInput, now: numbe
     ...synced,
     createdOn: synced.createdOn ?? today,
     profile: {
+      ...synced.profile,
       petId: input.petId,
       petName: cleanName(input.petName, PET_BY_ID[input.petId].name),
       gender: input.gender,
@@ -127,6 +136,11 @@ function validateProfile(input: Partial<OnboardingInput>): ((s: GameState) => Ga
         `Enter a movement goal from ${DEFAULTS.minMovementMinutes} to ${DEFAULTS.maxMovementMinutes} minutes.`,
       );
   }
+  const steps = (input as Partial<GameState['profile']>).stepTarget;
+  if (steps !== undefined && (!Number.isFinite(steps) || steps < DEFAULTS.minStepTarget || steps > DEFAULTS.maxStepTarget)) {
+    return (s) =>
+      fail(s, 'invalidSteps', `Enter a step target from ${DEFAULTS.minStepTarget.toLocaleString()} to ${DEFAULTS.maxStepTarget.toLocaleString()}.`);
+  }
   return null;
 }
 
@@ -156,9 +170,14 @@ function updateProfile(state: GameState, patch: Partial<Omit<GameState['profile'
     profile.eatingGoal = cleanText(patch.eatingGoal, DEFAULTS.eatingGoal, DEFAULTS.maxEatingGoalLength);
   }
   if (patch.movementMinutes !== undefined) profile.movementMinutes = Math.round(patch.movementMinutes);
-  const next = { ...synced, profile };
-  // Lowering the water target can complete the water goal; evaluate rewards.
-  return evaluate(next, events, 'water', isWaterDone(synced));
+  if (patch.customGoal !== undefined) profile.customGoal = patch.customGoal.trim().slice(0, DEFAULTS.maxCustomGoalLength);
+  if (patch.stepTarget !== undefined) profile.stepTarget = Math.round(patch.stepTarget);
+  let next: GameState = { ...synced, profile };
+  // Clearing the custom goal clears today's check-in for it (the reward, if earned, stays).
+  if (!profile.customGoal && next.today.customDone) next = { ...next, today: { ...next.today, customDone: false } };
+  // Lowering the water target or step target can complete goals; evaluate rewards.
+  const result = evaluate(next, events, 'water', isWaterDone(synced));
+  return applyActivity(result.state, result.events, now);
 }
 
 /* ------------------------------- water ------------------------------- */
@@ -196,13 +215,69 @@ function undoWater(state: GameState, now: number): GameResult {
 
 /* ------------------------------ check-ins ---------------------------- */
 
-function setCheckIn(state: GameState, goal: 'movement' | 'eating' | 'bonus', done: boolean, now: number): GameResult {
+function setCheckIn(state: GameState, goal: 'movement' | 'eating' | 'bonus' | 'custom', done: boolean, now: number): GameResult {
   const { state: synced, events } = syncDay(state, now);
-  const key = goal === 'movement' ? 'movementDone' : goal === 'eating' ? 'eatingDone' : 'bonusDone';
+  if (goal === 'custom' && done && !synced.profile.customGoal) {
+    return fail(synced, 'noCustomGoal', 'Set a custom goal first.');
+  }
+  const key = goal === 'movement' ? 'movementDone' : goal === 'eating' ? 'eatingDone' : goal === 'bonus' ? 'bonusDone' : 'customDone';
   if (synced.today[key] === done) return ok(synced, events);
-  const next: GameState = { ...synced, today: { ...synced.today, [key]: done } };
+  const today = { ...synced.today, [key]: done };
+  if (goal === 'movement') today.movementSource = done ? 'manual' : null;
+  const next: GameState = { ...synced, today };
   if (!done) return ok(writeHistory(next), [...events, { type: 'goalUndone', goal }]);
   return evaluate(next, events, goal, false);
+}
+
+/* ------------------------------- selfies ----------------------------- */
+
+function recordSelfie(state: GameState, file: string, now: number): GameResult {
+  const { state: synced, events } = syncDay(state, now);
+  const name = (file ?? '').trim();
+  if (!name) return fail(synced, 'invalidName', 'Could not save the photo.');
+  const date = synced.today.date;
+  const selfies = [...synced.selfies.filter((s) => s.date !== date), { date, file: name, at: now }].sort((a, b) => a.date.localeCompare(b.date));
+  const wasDone = synced.today.selfieDone;
+  const next: GameState = { ...synced, selfies, today: { ...synced.today, selfieDone: true } };
+  return evaluate(next, events, 'selfie', wasDone);
+}
+
+function removeSelfie(state: GameState, date: string, now: number): GameResult {
+  const { state: synced, events } = syncDay(state, now);
+  const selfies = synced.selfies.filter((s) => s.date !== date);
+  if (selfies.length === synced.selfies.length) return ok(synced, events);
+  const today = date === synced.today.date ? { ...synced.today, selfieDone: false } : synced.today;
+  const next: GameState = { ...synced, selfies, today };
+  const out: GameEvent[] = [...events];
+  if (date === synced.today.date && synced.today.selfieDone) out.push({ type: 'goalUndone', goal: 'selfie' });
+  return ok(writeHistory(next), out);
+}
+
+/* ------------------------------- health ------------------------------ */
+
+/**
+ * Stores today's steps and workout minutes from the health platform and
+ * completes the movement goal when either reaches its target. A goal the
+ * user completed by hand is never downgraded.
+ */
+function recordActivity(state: GameState, steps: number, workoutMinutes: number, now: number): GameResult {
+  const { state: synced, events } = syncDay(state, now);
+  const activity = {
+    steps: Math.max(0, Math.floor(Number.isFinite(steps) ? steps : 0)),
+    workoutMinutes: Math.max(0, Math.floor(Number.isFinite(workoutMinutes) ? workoutMinutes : 0)),
+    syncedAt: now,
+  };
+  const next: GameState = { ...synced, today: { ...synced.today, activity } };
+  return applyActivity(next, events, now);
+}
+
+function applyActivity(state: GameState, events: GameEvent[], _now: number): GameResult {
+  if (!state.profile.healthEnabled || !state.today.activity || state.today.movementDone) return ok(state, events);
+  const a = state.today.activity;
+  const reached = a.workoutMinutes >= state.profile.movementMinutes || a.steps >= state.profile.stepTarget;
+  if (!reached) return ok(state, events);
+  const next: GameState = { ...state, today: { ...state.today, movementDone: true, movementSource: 'health' } };
+  return evaluate(next, events, 'movement', false, 'health');
 }
 
 /* ------------------------------- rewards ----------------------------- */
@@ -212,7 +287,13 @@ function setCheckIn(state: GameState, goal: 'movement' | 'eating' | 'bonus', don
  * claimed today. The ledger is the only source of truth for "claimed", so
  * repeated taps, undo/redo and restarts can never award twice.
  */
-function evaluate(state: GameState, events: GameEvent[], trigger: GoalId | 'bonus', wasDoneBefore: boolean): GameResult {
+function evaluate(
+  state: GameState,
+  events: GameEvent[],
+  trigger: GoalId | BonusId,
+  wasDoneBefore: boolean,
+  source?: MovementSource,
+): GameResult {
   const date = state.today.date;
   const stageBefore = getStage(state);
   const dayLedger = { ...(state.ledger[date] ?? {}) };
@@ -230,12 +311,14 @@ function evaluate(state: GameState, events: GameEvent[], trigger: GoalId | 'bonu
   };
 
   const nowDone = isGoalDone(state, trigger);
-  if (nowDone && !wasDoneBefore) out.push({ type: 'goalCompleted', goal: trigger });
+  if (nowDone && !wasDoneBefore) out.push(source ? { type: 'goalCompleted', goal: trigger, source } : { type: 'goalCompleted', goal: trigger });
 
   if (isWaterDone(state)) claim('water', REWARDS.goal);
   if (state.today.movementDone) claim('movement', REWARDS.goal);
   if (state.today.eatingDone) claim('eating', REWARDS.goal);
   if (state.today.bonusDone) claim('bonus', REWARDS.bonus);
+  if (state.today.selfieDone) claim('selfie', REWARDS.bonus);
+  if (state.today.customDone) claim('custom', REWARDS.bonus);
   if (getCompletedCount(state) === 3) {
     const before = !!dayLedger.allThree;
     claim('allThree', REWARDS.allThree);

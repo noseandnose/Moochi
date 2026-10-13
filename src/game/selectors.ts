@@ -7,7 +7,7 @@ import {
   STAGE_INDEX,
 } from './constants';
 import { dateKey, dateKeyToNumber, recentDateKeys } from './date';
-import type { DailyRecord, GameState, GoalId, HabitPath, StageId } from './types';
+import type { BonusId, DailyRecord, GameState, GoalId, HabitPath, SelfieRecord, StageId } from './types';
 import { isWaterTargetReached, waterPercent } from './water';
 
 export function isOnboarded(state: GameState): boolean {
@@ -121,7 +121,7 @@ export function getWaterPercent(state: GameState): number {
   return waterPercent(getWaterConsumedMl(state), state.profile.waterTargetMl);
 }
 
-export function isGoalDone(state: GameState, goal: GoalId | 'bonus'): boolean {
+export function isGoalDone(state: GameState, goal: GoalId | BonusId): boolean {
   switch (goal) {
     case 'water':
       return isWaterDone(state);
@@ -131,7 +131,27 @@ export function isGoalDone(state: GameState, goal: GoalId | 'bonus'): boolean {
       return state.today.eatingDone;
     case 'bonus':
       return state.today.bonusDone;
+    case 'selfie':
+      return state.today.selfieDone;
+    case 'custom':
+      return state.today.customDone;
   }
+}
+
+/** Number of bonus tiles completed today (0..3). */
+export function getBonusCount(state: GameState): number {
+  return Number(state.today.selfieDone) + Number(state.today.bonusDone) + Number(state.today.customDone);
+}
+
+/** Whether today's health activity alone satisfies the movement goal. */
+export function activitySatisfiesMovement(state: GameState): boolean {
+  const a = state.today.activity;
+  if (!a) return false;
+  return a.workoutMinutes >= state.profile.movementMinutes || a.steps >= state.profile.stepTarget;
+}
+
+export function getTodaySelfie(state: GameState): SelfieRecord | undefined {
+  return state.selfies.find((s) => s.date === state.today.date);
 }
 
 export function getCompletedCount(state: GameState): number {
@@ -146,6 +166,8 @@ export function getDailyRecord(state: GameState): DailyRecord {
     movement: state.today.movementDone,
     eating: state.today.eatingDone,
     bonus: state.today.bonusDone,
+    selfie: state.today.selfieDone,
+    custom: state.today.customDone,
   };
 }
 
@@ -186,7 +208,7 @@ export function getLastSevenDays(state: GameState, now: number): WeekDay[] {
       dayOfMonth: d.getDate(),
       isToday: date === today,
       completed: hasData && record ? Number(record.water) + Number(record.movement) + Number(record.eating) : null,
-      bonus: !!record?.bonus,
+      bonus: !!record && (record.bonus || record.selfie || record.custom),
     };
   });
 }

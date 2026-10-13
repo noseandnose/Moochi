@@ -10,8 +10,11 @@ export type GearId = 'none' | 'cap' | 'bow' | 'glasses' | 'scarf' | 'crown';
 export type StageId = 'egg' | 'baby' | 'teen' | 'adult' | 'companion';
 export type HabitPath = 'balanced' | 'hydration' | 'active' | 'nourished';
 export type GoalId = 'water' | 'movement' | 'eating';
-export type CheckInId = 'movement' | 'eating' | 'bonus';
-export type RewardKey = GoalId | 'bonus' | 'allThree';
+/** The three optional bonus tiles: progress selfie, daily challenge, custom goal. */
+export type BonusId = 'selfie' | 'bonus' | 'custom';
+export type CheckInId = 'movement' | 'eating' | 'bonus' | 'custom';
+export type RewardKey = GoalId | BonusId | 'allThree';
+export type MovementSource = 'manual' | 'health';
 
 /** A single water log entry. Amounts are always stored in millilitres. */
 export interface WaterEntry {
@@ -25,6 +28,22 @@ export interface DailyRecord {
   movement: boolean;
   eating: boolean;
   bonus: boolean;
+  selfie: boolean;
+  custom: boolean;
+}
+
+/** A progress selfie. `file` is a name inside the app's selfies directory. */
+export interface SelfieRecord {
+  date: string;
+  file: string;
+  at: number;
+}
+
+/** Activity read from Apple Health or Health Connect for a local day. */
+export interface DailyActivity {
+  steps: number;
+  workoutMinutes: number;
+  syncedAt: number;
 }
 
 /** Rewards claimed per local calendar day. Never cleared by undo. */
@@ -38,6 +57,11 @@ export interface Profile {
   waterTargetMl: number;
   movementMinutes: number;
   eatingGoal: string;
+  /** Optional user-defined daily goal shown as the third bonus tile. */
+  customGoal: string;
+  /** Steps that count as a completed movement goal when health sync is on. */
+  stepTarget: number;
+  healthEnabled: boolean;
 }
 
 export interface Prefs {
@@ -59,8 +83,12 @@ export interface TodayState {
   date: string;
   waterEntries: WaterEntry[];
   movementDone: boolean;
+  movementSource: MovementSource | null;
   eatingDone: boolean;
   bonusDone: boolean;
+  selfieDone: boolean;
+  customDone: boolean;
+  activity: DailyActivity | null;
 }
 
 export interface GameState {
@@ -73,12 +101,13 @@ export interface GameState {
   today: TodayState;
   ledger: Ledger;
   history: Record<string, DailyRecord>;
+  selfies: SelfieRecord[];
 }
 
 export type GameEvent =
   | { type: 'reward'; source: RewardKey; xp: number; coins: number }
-  | { type: 'goalCompleted'; goal: GoalId | 'bonus' }
-  | { type: 'goalUndone'; goal: GoalId | 'bonus' }
+  | { type: 'goalCompleted'; goal: GoalId | BonusId; source?: MovementSource }
+  | { type: 'goalUndone'; goal: GoalId | BonusId }
   | { type: 'allGoalsCompleted' }
   | { type: 'stageChanged'; from: StageId; to: StageId }
   | { type: 'purchase'; gear: GearId; cost: number }
@@ -97,7 +126,9 @@ export type ErrorCode =
   | 'notOwned'
   | 'invalidTarget'
   | 'invalidMinutes'
-  | 'invalidName';
+  | 'invalidName'
+  | 'noCustomGoal'
+  | 'invalidSteps';
 
 export interface OnboardingInput {
   petId: PetId;
@@ -115,6 +146,9 @@ export type GameAction =
   | { type: 'addWater'; ml: number; now: number }
   | { type: 'undoWater'; now: number }
   | { type: 'setCheckIn'; goal: CheckInId; done: boolean; now: number }
+  | { type: 'recordSelfie'; file: string; now: number }
+  | { type: 'removeSelfie'; date: string; now: number }
+  | { type: 'recordActivity'; steps: number; workoutMinutes: number; now: number }
   | { type: 'selectPet'; petId: PetId }
   | { type: 'renamePet'; name: string }
   | { type: 'updateProfile'; patch: Partial<Omit<Profile, 'petId'>>; now: number }

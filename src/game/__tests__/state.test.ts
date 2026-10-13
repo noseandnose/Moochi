@@ -45,7 +45,7 @@ describe('persistence and migrations', () => {
     expect(out.state.progress.ownedGear).toEqual(['none', 'crown']);
     expect(out.state.progress.equippedGear).toBe('none');
     expect(out.state.ledger).toEqual({ '2026-10-13': { water: true } });
-    expect(out.state.history).toEqual({ '2026-10-13': { water: false, movement: false, eating: false, bonus: false } });
+    expect(out.state.history).toEqual({ '2026-10-13': { water: false, movement: false, eating: false, bonus: false, selfie: false, custom: false } });
     expect(out.state.createdOn).toBe('2026-10-13');
   });
 

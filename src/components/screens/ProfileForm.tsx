@@ -21,6 +21,7 @@ export interface ProfileValues {
   waterTargetMl: number;
   movementMinutes: number;
   eatingGoal: string;
+  customGoal?: string;
 }
 
 export interface ProfileFormProps {
@@ -29,6 +30,8 @@ export interface ProfileFormProps {
   onSubmit: (values: ProfileValues) => void;
   /** Hide the pet name field (My pet has its own rename). */
   showName?: boolean;
+  /** Show the optional custom daily goal (settings only). */
+  showCustomGoal?: boolean;
   compact?: boolean;
 }
 
@@ -43,7 +46,7 @@ function targetToText(ml: number, unit: WaterUnit): string {
   return unit === 'oz' ? String(v) : String(Math.round(v));
 }
 
-export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, compact }: ProfileFormProps) {
+export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, showCustomGoal = false, compact }: ProfileFormProps) {
   const [petName, setPetName] = useState(initial.petName);
   const [gender, setGender] = useState<Gender>(initial.gender);
   const [unit, setUnit] = useState<WaterUnit>(initial.waterUnit);
@@ -51,6 +54,7 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, c
   const [targetText, setTargetText] = useState(targetToText(initial.waterTargetMl, initial.waterUnit));
   const [minutesText, setMinutesText] = useState(String(initial.movementMinutes));
   const [eatingGoal, setEatingGoal] = useState(initial.eatingGoal);
+  const [customGoal, setCustomGoal] = useState(initial.customGoal ?? '');
   const [touched, setTouched] = useState(false);
 
   const targetError = useMemo(() => {
@@ -107,6 +111,7 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, c
       waterTargetMl: toMl(n, unit),
       movementMinutes: Number(minutesText),
       eatingGoal: eatingGoal.trim(),
+      ...(showCustomGoal ? { customGoal: customGoal.trim() } : {}),
     });
   };
 
@@ -159,6 +164,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, c
         error={touched ? minutesError : null}
       />
       <Field label="Eating goal" value={eatingGoal} onChangeText={setEatingGoal} maxLength={DEFAULTS.maxEatingGoalLength} placeholder={DEFAULTS.eatingGoal} returnKeyType="done" />
+      {showCustomGoal ? (
+        <Field label="Your own daily goal (bonus)" value={customGoal} onChangeText={setCustomGoal} maxLength={DEFAULTS.maxCustomGoalLength} placeholder="Read 10 pages" hint="Optional. Shown as the third bonus tile; leave empty to hide it." returnKeyType="done" />
+      ) : null}
       <Button label={submitLabel} size="lg" full onPress={submit} style={{ marginTop: spacing.sm }} />
     </View>
   );

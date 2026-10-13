@@ -431,76 +431,174 @@ def draw_egg(c: Canvas, pet: str, frame: str):
 
 
 # --------------------------------------------------------------- overlays
+# Fitted anchors in teen head coordinates: head top centre and width, eye
+# centres, and the neck line (y, x0, x1). Head items go through H (head
+# scale), neck items through T (body scale) so both follow the stage pose.
+GEAR = {
+    "tofu": dict(top=(32, 17), headW=28, eyes=((24, 29.5), (40, 29.5)), neck=(40, 24, 40), brow=23),
+    "juno": dict(top=(32, 13), headW=26, eyes=((25, 24.5), (39, 24.5)), neck=(37, 23, 41), brow=16),
+    "pebble": dict(top=(32, 13.5), headW=24, eyes=((24, 26.5), (40, 26.5)), neck=(41, 23, 41), brow=19),
+    "ori": dict(top=(32, 10.5), headW=22, eyes=((25, 24.5), (39, 24.5)), neck=(37, 23, 41), brow=17),
+    "fern": dict(top=(32, 23.5), headW=30, eyes=((25, 30.5), (39, 30.5)), neck=(44, 22, 42), brow=25),
+}
+
+GOLD, GOLD_DK, GOLD_HI = "#e0b64a", "#a9822a", "#f5dc8a"
+RIB, RIB_DK, RIB_HI = "#b4584f", "#8a3f39", "#e39a92"
+SAGE, SAGE_DK, SAGE_HI = "#7d9a7f", "#55705a", "#a9c2a8"
+BLUE, BLUE_DK, BLUE_HI = "#6fb3cf", "#3f8aa8", "#c4e6f1"
+LEAF, LEAF_DK, LEAF_HI = "#7faa5f", "#527a3d", "#b6d58f"
+CORAL, CORAL_DK, CORAL_HI = "#cf6b56", "#9b4a3a", "#f0b1a3"
+
+
+def droplet(c, pts_fn, x, y, k=1.0, fill=BLUE):
+    """A teardrop with a highlight; (x, y) is the tip, k the size."""
+    body = [(x, y), (x + 2.2 * k, y + 3.2 * k), (x + 2.4 * k, y + 5 * k), (x + 1.2 * k, y + 6.6 * k), (x - 1.2 * k, y + 6.6 * k), (x - 2.4 * k, y + 5 * k), (x - 2.2 * k, y + 3.2 * k)]
+    c.shape(pts_fn(body), fill)
+    hx, hy = pts_fn([(x - 1.1 * k, y + 3.6 * k)])[0]
+    c.rect(hx, hy, 0.8 * k, 1.4 * k, BLUE_HI)
+
 
 def draw_overlay(c: Canvas, pet: str, stage: int, kind: str):
     s, hs, T, H = transforms(stage, pet)
-    a = ANCHORS[pet]
-    hatY, faceY, neckY = a["hatY"], a["faceY"], a["neckY"]
+    g = GEAR[pet]
+    cx, top = g["top"]
+    hw = g["headW"]
+    (lx, ly), (rx, ry) = g["eyes"]
+    ny, nx0, nx1 = g["neck"]
     es = hs * s
-    paper = "#fffef9"
+    unit = lambda v: v * es
+    # ---------------------------------------------------------------- paths
     if kind == "hydration":
-        drop = [(12, 44), (15, 49), (15, 52), (12, 54), (9, 52), (9, 49)]
-        c.shape(T(tf(drop, 1, 1, 10, -2, 32, GROUND)), "#8fc3d8")
-        pt = T([(22.5, 46)])[0]
-        c.rect(pt[0], pt[1], 1 * s, 1.5 * s, paper)
-        if stage >= 3:
-            c.shape(H([(52, 13), (54, 17), (54, 19), (51, 21), (49, 19), (50, 16)]), "#8fc3d8")
+        # thin cord around the neck with a drop pendant
+        c.shape(T([(nx0 + 2, ny - 1), (nx1 - 2, ny - 1), (nx1 - 2, ny + 0.5), (nx0 + 2, ny + 0.5)]), BLUE_DK, outline=None, shading=False)
+        droplet(c, T, 32, ny, 1.0)
+        # water shine marks on the cheek
+        for px_, py_ in [(lx - 5, ly + 3.5), (lx - 4, ly + 5)]:
+            x, y = H([(px_, py_)])[0]
+            c.rect(x, y, unit(1.5), unit(0.6), BLUE_HI)
+        if stage >= 3:  # orbiting drops
+            droplet(c, H, cx - hw / 2 - 5, top + 2, 0.8)
         if stage >= 4:
-            c.shape(H([(11, 16), (13, 19), (13, 21), (11, 23), (9, 21), (9, 18)]), "#8fc3d8")
+            droplet(c, H, cx + hw / 2 + 5, top - 2, 0.8)
     elif kind == "active":
-        y = faceY - 4
-        c.shape(H([(21, y), (43, y), (43, y + 2.5), (21, y + 2.5)]), "#c9684f", shading=False)
-        pt = H([(22.5, y + 0.5)])[0]
-        c.rect(pt[0], pt[1], 4 * es, 0.5 * es, "#f2b7a6")
-        c.shape(H([(44, y), (49, y + 2), (48, y + 6), (44, y + 3)]), "#c9684f", shading=False)
-        if stage >= 3:
-            for wx in (17, 42):
-                c.shape(T([(wx, 45), (wx + 5, 45), (wx + 5, 47), (wx, 47)]), "#c9684f", outline=INK, shading=False)
+        y = g["brow"]
+        band = [(cx - hw / 2 - 1, y), (cx + hw / 2 + 1, y), (cx + hw / 2 + 1, y + 2.5), (cx - hw / 2 - 1, y + 2.5)]
+        c.shape(H(band), CORAL, shading=False)
+        x, yy = H([(cx - hw / 2 + 1, y + 0.6)])[0]
+        c.rect(x, yy, unit(hw * 0.35), unit(0.6), CORAL_HI)
+        # knot and two tails on the right
+        c.shape(H([(cx + hw / 2, y - 0.5), (cx + hw / 2 + 3, y - 0.5), (cx + hw / 2 + 3, y + 3), (cx + hw / 2, y + 3)]), CORAL_DK, shading=False)
+        c.shape(H([(cx + hw / 2 + 2.5, y + 1), (cx + hw / 2 + 7, y + 2.5), (cx + hw / 2 + 6.5, y + 4.5), (cx + hw / 2 + 2.5, y + 3)]), CORAL, shading=False)
+        c.shape(H([(cx + hw / 2 + 2.5, y + 2.5), (cx + hw / 2 + 5.5, y + 6), (cx + hw / 2 + 4, y + 7), (cx + hw / 2 + 2, y + 4)]), CORAL, shading=False)
+        if stage >= 3:  # wristbands
+            for wx in (nx0 - 5, nx1 + 1):
+                c.shape(T([(wx, ny + 6), (wx + 4.5, ny + 6), (wx + 4.5, ny + 8), (wx, ny + 8)]), CORAL, outline=INK, shading=False)
+        if stage >= 4:  # bolt mark on the chest
+            c.shape(T([(32.5, ny + 3), (30.5, ny + 7), (32, ny + 7), (31, ny + 10.5), (34, ny + 6), (32.5, ny + 6)]), GOLD, outline=None, shading=False)
     elif kind == "nourished":
-        stem = H([(32, hatY - 3)])[0]
-        c.rect(stem[0], stem[1], 1 * es, 6 * es, "#5f7d4e")
-        c.shape(H([(31, hatY - 2), (26, hatY - 3), (24, hatY - 7), (29, hatY - 6), (32, hatY - 3)]), "#8db46f")
-        c.shape(H([(33, hatY - 3), (35, hatY - 8), (40, hatY - 9), (39, hatY - 5)]), "#8db46f")
-        if stage >= 3:
-            c.shape(T([(21, 44), (23, 41), (25, 44)]), "#8db46f")
+        # a sprig tucked behind the left side of the head
+        bx, by = cx - hw / 2 + 1, top + 4
+        stem = [(bx, by + 4), (bx - 4, by - 2), (bx - 3.4, by - 2.4), (bx + 0.8, by + 3.6)]
+        c.shape(H(stem), LEAF_DK, outline=None, shading=False)
+        leaf1 = [(bx - 2, by + 1), (bx - 7, by - 1), (bx - 8, by - 5), (bx - 4, by - 4)]
+        leaf2 = [(bx - 3.5, by - 1.5), (bx - 4, by - 7), (bx - 1, by - 9), (bx, by - 4)]
+        c.shape(H(leaf1), LEAF)
+        c.shape(H(leaf2), LEAF_HI)
+        for px_, py_ in [(bx - 5.5, by - 2.5), (bx - 2.3, by - 6)]:
+            x, y = H([(px_, py_)])[0]
+            c.rect(x, y, unit(0.6), unit(2), LEAF_DK)
+        if stage >= 3:  # leaf freckles on the body
+            for px_, py_ in [(nx0 + 2, ny + 5), (nx1 - 4, ny + 7)]:
+                x, y = T([(px_, py_)])[0]
+                c.shape([(x, y), (x + 2 * s, y - 1.5 * s), (x + 3 * s, y + 0.5 * s), (x + 1 * s, y + 1.5 * s)], LEAF, outline=None, shading=False)
+        if stage >= 4:  # a second sprig on the right
+            rx_, ry_ = cx + hw / 2 - 1, top + 5
+            c.shape(H([(rx_ + 1, ry_), (rx_ + 6, ry_ - 2), (rx_ + 8, ry_ - 6), (rx_ + 4, ry_ - 5)]), LEAF)
+    # ----------------------------------------------------------------- gear
     elif kind == "cap":
-        crown = [(23, hatY - 4), (27, hatY - 8), (37, hatY - 8), (41, hatY - 4), (41, hatY), (23, hatY)]
-        c.shape(H(crown), "#6f8a74")
-        c.shape(H([(22, hatY), (47, hatY), (47, hatY + 2), (22, hatY + 2)]), "#4f6a58", shading=False)
-        pt = H([(32, hatY - 6)])[0]
-        c.rect(pt[0], pt[1], 1 * es, 4 * es, "#4f6a58")
+        # domed crown hugging the head top, a short brim facing right, a button
+        w = hw * 0.62
+        dome = [(cx - w, top + 1), (cx - w + 1, top - 3), (cx - w * 0.55, top - 6.5), (cx, top - 8), (cx + w * 0.55, top - 6.5), (cx + w - 1, top - 3), (cx + w, top + 1)]
+        c.shape(H(dome), SAGE, light_edge=3)
+        band = [(cx - w, top + 1), (cx + w, top + 1), (cx + w, top + 3), (cx - w, top + 3)]
+        c.shape(H(band), SAGE_DK, outline=INK, shading=False)
+        brim = [(cx + w * 0.3, top + 1), (cx + w + 7, top + 1.5), (cx + w + 7.5, top + 3.5), (cx + w * 0.3, top + 3)]
+        c.shape(H(brim), SAGE_DK, shading=False)
+        x, y = H([(cx - w * 0.6, top - 2)])[0]
+        c.rect(x, y, unit(2.5), unit(0.7), SAGE_HI)
+        x, y = H([(cx - 0.8, top - 9.5)])[0]
+        c.rect(x, y, unit(1.6), unit(1.6), SAGE_DK)
+        x, y = H([(cx, top - 7.5)])[0]
+        c.rect(x, y, unit(0.7), unit(6.5), SAGE_DK)
     elif kind == "bow":
-        bx = a["bowX"]
-        bow = [(bx - 5, hatY), (bx - 1, hatY + 2), (bx + 4, hatY - 1), (bx + 5, hatY + 6), (bx, hatY + 4), (bx - 5, hatY + 6)]
-        c.shape(H(bow), "#b8635a")
-        pt = H([(bx - 1, hatY + 2)])[0]
-        c.rect(pt[0], pt[1], 2 * es, 2 * es, "#f2c4bc")
+        # two loops, a knot and two tails, perched on the top right
+        bx, by = cx + hw / 2 - 2, top + 1
+        loop_l = [(bx - 1, by), (bx - 6, by - 4), (bx - 7.5, by - 1), (bx - 6, by + 2.5), (bx - 1, by + 1.5)]
+        loop_r = [(bx + 1, by - 0.5), (bx + 6, by - 4.5), (bx + 7.5, by - 1.5), (bx + 6, by + 2), (bx + 1, by + 1.5)]
+        c.shape(H(loop_l), RIB)
+        c.shape(H(loop_r), RIB)
+        for px_, py_ in [(bx - 5, by - 2), (bx + 4, by - 2.5)]:
+            x, y = H([(px_, py_)])[0]
+            c.rect(x, y, unit(1.5), unit(0.7), RIB_HI)
+        tail_l = [(bx - 1, by + 1), (bx - 3, by + 6), (bx - 1, by + 6.5), (bx + 0.5, by + 2)]
+        tail_r = [(bx + 1, by + 1), (bx + 3.5, by + 6.5), (bx + 1.5, by + 7), (bx - 0.5, by + 2)]
+        c.shape(H(tail_l), RIB_DK, shading=False)
+        c.shape(H(tail_r), RIB_DK, shading=False)
+        c.shape(H([(bx - 1.5, by - 1.5), (bx + 1.5, by - 1.5), (bx + 1.5, by + 1.5), (bx - 1.5, by + 1.5)]), RIB_DK, shading=False)
     elif kind == "glasses":
-        y = faceY - 1.5
-        for x in (20, 35):
-            c.shape(H([(x, y), (x + 10, y), (x + 10, y + 8), (x, y + 8)]), "#dbe7ef", outline=INK, shading=False)
-            m = c.mask(H([(x + 1, y + 1), (x + 9, y + 1), (x + 9, y + 7), (x + 1, y + 7)]))
-            ys, xs = m.nonzero()
+        # round lenses centred on the eyes, a bridge and arms
+        r = 5.2
+        for ex, ey in ((lx, ly), (rx, ry)):
+            ring = oval(ex, ey, r, r, 14)
+            c.shape(H(ring), "#f4f7f9", outline=INK, shading=False)
+            inner = c.mask(H(oval(ex, ey, r - 1.2, r - 1.2, 14)))
+            ys, xs = inner.nonzero()
             for yy, xx in zip(ys, xs):
-                c.px[yy, xx] = (219, 231, 239, 70)
-            pt = H([(x + 2, y + 2)])[0]
-            c.rect(pt[0], pt[1], 2 * es, 0.5 * es, "#ffffff")
-        pt = H([(30, y + 3)])[0]
-        c.rect(pt[0], pt[1], 5 * es, 1 * es)
+                c.px[yy, xx] = (214, 232, 240, 80)
+            x, y = H([(ex - 2.6, ey - 3)])[0]
+            c.rect(x, y, unit(1.6), unit(0.7), "#ffffff")
+            x, y = H([(ex - 3.3, ey - 2)])[0]
+            c.rect(x, y, unit(0.7), unit(1.2), "#ffffff")
+        x, y = H([(lx + r - 0.4, ly - 0.6)])[0]
+        c.rect(x, y, unit(rx - lx - 2 * r + 0.8), unit(1.2), INK)
+        x, y = H([(lx - r - 3, ly - 1)])[0]
+        c.rect(x, y, unit(3.2), unit(1), INK)
+        x, y = H([(rx + r - 0.2, ry - 1)])[0]
+        c.rect(x, y, unit(3.2), unit(1), INK)
     elif kind == "scarf":
-        c.shape(T([(22, neckY), (42, neckY), (42, neckY + 3), (22, neckY + 3)]), "#b8635a")
-        c.shape(T([(36, neckY + 3), (42, neckY + 3), (43, neckY + 10), (37, neckY + 10)]), "#b8635a")
-        for pt in T([(24, neckY + 1), (38, neckY + 7), (30, neckY + 1)]):
-            c.rect(pt[0], pt[1], 2.5 * s, 1 * s, "#f0c7bf")
+        # wrapped band with knit stripes, a tucked fold and a fringed tail
+        band = [(nx0 - 1, ny - 1), (nx1 + 1, ny - 1), (nx1 + 1.5, ny + 3.5), (nx0 - 1.5, ny + 3.5)]
+        c.shape(T(band), RIB)
+        for i, sx_ in enumerate(range(int(nx0) + 1, int(nx1) - 1, 4)):
+            x, y = T([(sx_, ny + (0.3 if i % 2 else 1.6))])[0]
+            c.rect(x, y, unit(2) * s / es, unit(0.7) * s / es, RIB_HI)
+        fold = [(nx1 - 6, ny + 3), (nx1 + 1.5, ny + 3), (nx1 + 2, ny + 6), (nx1 - 5, ny + 6)]
+        c.shape(T(fold), RIB_DK, shading=False)
+        tail = [(nx1 - 5, ny + 5.5), (nx1 + 1, ny + 5.5), (nx1 + 2, ny + 13), (nx1 - 4, ny + 13)]
+        c.shape(T(tail), RIB)
+        for sx_ in (nx1 - 3.5, nx1 - 0.5):
+            x, y = T([(sx_, ny + 13)])[0]
+            c.rect(x, y, 1 * s, 2 * s, RIB_DK)
+            x, y = T([(sx_ + 1.5, ny + 13)])[0]
+            c.rect(x, y, 1 * s, 1.5 * s, RIB_DK)
+        x, y = T([(nx1 - 3.5, ny + 8)])[0]
+        c.rect(x, y, 3 * s, 0.7 * s, RIB_HI)
     elif kind == "crown":
-        crown = [(25, hatY), (23, hatY - 7), (29, hatY - 4), (32, hatY - 9), (35, hatY - 4), (41, hatY - 7), (39, hatY)]
-        c.shape(H(crown), "#e2b94f")
-        pt = H([(26, hatY - 1)])[0]
-        c.rect(pt[0], pt[1], 13 * es, 1 * es, "#b58b2a")
-        pt = H([(31, hatY - 4)])[0]
-        c.rect(pt[0], pt[1], 2 * es, 2 * es, "#8fc3d8")
-        for pt in H([(27, hatY - 2), (36, hatY - 2)]):
-            c.rect(pt[0], pt[1], 1 * es, 1 * es, "#b8635a")
+        # gold crown: three points, a darker base band, a gem in the middle
+        w = hw * 0.42
+        base_y = top + 0.5
+        pts = [(cx - w, base_y), (cx - w, base_y - 4), (cx - w * 1.05, base_y - 9), (cx - w * 0.5, base_y - 5), (cx, base_y - 11), (cx + w * 0.5, base_y - 5), (cx + w * 1.05, base_y - 9), (cx + w, base_y - 4), (cx + w, base_y)]
+        c.shape(H(pts), GOLD, light_edge=3)
+        c.shape(H([(cx - w, base_y - 2.5), (cx + w, base_y - 2.5), (cx + w, base_y), (cx - w, base_y)]), GOLD_DK, outline=INK, shading=False)
+        for px_, py_ in [(cx - w * 1.0, base_y - 8.5), (cx + 0.3, base_y - 10.5), (cx + w * 1.0, base_y - 8.5)]:
+            x, y = H([(px_, py_)])[0]
+            c.rect(x, y, unit(1.2), unit(1.2), GOLD_HI)
+        gx, gy = H([(cx - 1.3, base_y - 5.8)])[0]
+        c.rect(gx, gy, unit(2.6), unit(2.6), BLUE)
+        c.rect(gx, gy, unit(1), unit(1), BLUE_HI)
+        for px_ in (cx - w * 0.6, cx + w * 0.6):
+            x, y = H([(px_ - 0.6, base_y - 1.9)])[0]
+            c.rect(x, y, unit(1.2), unit(1.2), RIB)
 
 
 DRAWERS = {"tofu": draw_tofu, "juno": draw_juno, "pebble": draw_pebble, "ori": draw_ori, "fern": draw_fern}

@@ -3,6 +3,7 @@ import { X } from 'lucide-react-native';
 import React from 'react';
 import { Alert, Platform, StyleSheet, Switch, View } from 'react-native';
 
+import { HealthSettings } from '@/components/screens/HealthSettings';
 import { ProfileForm } from '@/components/screens/ProfileForm';
 import { useHaptics } from '@/hooks/useHaptics';
 import { now } from '@/hooks/useNow';
@@ -70,8 +71,10 @@ export default function Settings() {
             waterTargetMl: state.profile.waterTargetMl,
             movementMinutes: state.profile.movementMinutes,
             eatingGoal: state.profile.eatingGoal,
+            customGoal: state.profile.customGoal,
           }}
           submitLabel="Save goals"
+          showCustomGoal
           compact
           onSubmit={(values) => {
             const events = dispatch({ type: 'updateProfile', patch: values, now: now() });
@@ -87,6 +90,9 @@ export default function Settings() {
         />
       </Card>
 
+      <SectionHeading title="Steps and workouts" />
+      <HealthSettings />
+
       <SectionHeading title="Motion and feedback" />
       <Card style={{ gap: spacing.md }}>
         <ToggleRow
@@ -101,7 +107,7 @@ export default function Settings() {
       <SectionHeading title="Your data" />
       <Card tone="muted" elevated={false} style={{ gap: spacing.sm }}>
         <Text variant="small" tone="soft">
-          MOCHI stores everything on this device only: your pet, goals, XP, coins, gear, water log and daily history. There is no account, no sync and nothing leaves your phone.
+          MOCHI stores everything on this device only: your pet, goals, XP, coins, gear, water log, progress selfies and daily history. There is no account, no cloud sync and nothing leaves your phone. The home screen widget reads only your pet, level and today’s goal count.
         </Text>
         <Text variant="small" tone="soft">
           Deleting the app removes this data. Progress from the MOCHI website does not transfer automatically.
