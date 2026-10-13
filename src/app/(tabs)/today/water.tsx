@@ -17,6 +17,7 @@ import {
   toMl,
   unitLabel,
 } from '@/game';
+import { useBack } from '@/hooks/useBack';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCelebration } from '@/state/CelebrationProvider';
 import { now } from '@/hooks/useNow';
@@ -30,6 +31,7 @@ export default function Water() {
   const { queue } = useCelebration();
   const toast = useToast();
   const haptic = useHaptics();
+  const back = useBack();
   const [custom, setCustom] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
 
@@ -40,25 +42,26 @@ export default function Water() {
   const done = isWaterDone(state);
   const last = state.today.waterEntries[state.today.waterEntries.length - 1];
 
-  const add = (ml: number) => {
+  const add = (ml: number): boolean => {
     const wasDone = isWaterDone(state);
     const events = dispatch({ type: 'addWater', ml, now: now() });
     const error = events.find((e) => e.type === 'error');
     if (error?.type === 'error') {
       toast(error.message, 'danger');
       haptic('warning');
-      return;
+      return false;
     }
     const completedNow = events.some((e) => e.type === 'goalCompleted');
     if (completedNow && !wasDone) {
+      // Today presents the celebration; a toast here would say the same thing twice.
       queue(events);
       haptic('success');
-      toast('Water goal complete.');
-      router.back();
-      return;
+      back();
+      return true;
     }
     haptic('tap');
     toast(`Added ${formatWater(ml, unit)}.`);
+    return true;
   };
 
   const addCustom = () => {
@@ -69,8 +72,7 @@ export default function Water() {
       return;
     }
     setCustomError(null);
-    setCustom('');
-    add(toMl(n, unit));
+    if (add(toMl(n, unit))) setCustom('');
   };
 
   const undo = () => {

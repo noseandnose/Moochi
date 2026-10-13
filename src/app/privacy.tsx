@@ -1,7 +1,7 @@
-import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import React from 'react';
 
+import { useBack } from '@/hooks/useBack';
 import { Card, IconButton, Screen, Text } from '@/ui/components';
 import { colors, spacing } from '@/ui/theme';
 
@@ -29,13 +29,13 @@ const SECTIONS: { title: string; body: string }[] = [
 ];
 
 export default function Privacy() {
-  const router = useRouter();
+  const back = useBack();
   return (
     <Screen
       title="Privacy"
       subtitle="Short version: everything stays on your phone."
       headerRight={
-        <IconButton label="Close" onPress={() => router.back()}>
+        <IconButton label="Close" onPress={back}>
           <X size={22} color={colors.ink} />
         </IconButton>
       }

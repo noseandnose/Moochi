@@ -26,16 +26,40 @@ export async function backupCorrupt(payload: unknown): Promise<void> {
   }
 }
 
-let queue: Promise<void> = Promise.resolve();
+let writing: Promise<void> | null = null;
+let latest: GameState | null = null;
+let lastWritten: GameState | null = null;
 
-/** Serialises writes so the latest state always lands last. */
-export function writeState(state: GameState): Promise<void> {
-  const text = JSON.stringify(state);
-  queue = queue.then(() => AsyncStorage.setItem(STORAGE_KEY, text)).catch(() => undefined);
-  return queue;
+/**
+ * Persists the newest state. Intermediate states that arrive while a write
+ * is in flight are skipped: only the latest one is written once the current
+ * write settles, so a burst of taps costs one write, not one per tap.
+ * Resolves true when the state is on disk, false when the write failed.
+ */
+export function writeState(state: GameState): Promise<boolean> {
+  latest = state;
+  if (writing) return writing.then(() => lastWritten === latest);
+  const run = async (): Promise<void> => {
+    while (latest && latest !== lastWritten) {
+      const target = latest;
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(target));
+        lastWritten = target;
+      } catch {
+        // Leave lastWritten as is; the caller learns the write failed.
+        break;
+      }
+    }
+  };
+  writing = run().finally(() => {
+    writing = null;
+  });
+  return writing.then(() => lastWritten === state || lastWritten === latest);
 }
 
 export async function clearState(): Promise<void> {
-  await queue;
+  if (writing) await writing;
+  latest = null;
+  lastWritten = null;
   await AsyncStorage.removeItem(STORAGE_KEY);
 }

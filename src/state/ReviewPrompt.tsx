@@ -14,12 +14,14 @@ export function ReviewPrompt() {
   const { state, ready, subscribe, dispatch } = useGame();
   useEffect(() => {
     if (!ready || Platform.OS === 'web') return;
-    return subscribe((events, next) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const unsubscribe = subscribe((events, next) => {
       if (next.prefs.reviewRequested) return;
       const evolved = events.some((e) => e.type === 'stageChanged' && STAGE_INDEX[e.to] >= STAGE_INDEX.teen);
       if (!evolved) return;
-      dispatch({ type: 'updatePrefs', patch: { reviewRequested: true } });
-      setTimeout(async () => {
+      // Not inside the listener loop of the dispatch that produced the event.
+      setTimeout(() => dispatch({ type: 'updatePrefs', patch: { reviewRequested: true } }), 0);
+      timer = setTimeout(async () => {
         try {
           if (await StoreReview.isAvailableAsync()) await StoreReview.requestReview();
         } catch {
@@ -27,6 +29,10 @@ export function ReviewPrompt() {
         }
       }, 4000);
     });
+    return () => {
+      unsubscribe();
+      if (timer) clearTimeout(timer);
+    };
   }, [ready, subscribe, dispatch, state.prefs.reviewRequested]);
   return null;
 }

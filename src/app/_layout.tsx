@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { isOnboarded } from '@/game';
@@ -24,18 +25,20 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <GameProvider>
-        <CelebrationProvider>
-          <ToastProvider>
-            <StatusBar style="dark" />
-            <HealthSync />
-            <WidgetSync />
-            <ReminderSync />
-            <ReviewPrompt />
-            <Routes />
-          </ToastProvider>
-        </CelebrationProvider>
-      </GameProvider>
+      <KeyboardProvider>
+        <GameProvider>
+          <CelebrationProvider>
+            <ToastProvider>
+              <StatusBar style="dark" />
+              <HealthSync />
+              <WidgetSync />
+              <ReminderSync />
+              <ReviewPrompt />
+              <Routes />
+            </ToastProvider>
+          </CelebrationProvider>
+        </GameProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
@@ -48,7 +51,12 @@ function Routes() {
   }, [ready]);
   if (!ready) return <View style={styles.loading} />;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
       <Stack.Protected guard={onboarded}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="settings" options={{ presentation: 'modal', gestureEnabled: true }} />

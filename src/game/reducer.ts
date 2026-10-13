@@ -1,13 +1,14 @@
 import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, REWARDS, STREAK } from './constants';
-import { dateKey, shiftDateKey } from './date';
+import { dateKey } from './date';
 import {
-  countsForStreak,
   getCompletedCount,
   getDailyRecord,
   getStage,
   isActiveDay,
   isGoalDone,
   isWaterDone,
+  lastRecordedDate,
+  projectStreak,
   streakEndingOn,
 } from './selectors';
 import { createInitialState, emptyDay } from './state';
@@ -38,7 +39,7 @@ export function reduce(state: GameState, action: GameAction): GameResult {
   return result;
 }
 
-const USER_ACTIONS = new Set<GameAction['type']>(['completeOnboarding', 'addWater', 'undoWater', 'setCheckIn', 'recordSelfie', 'removeSelfie', 'updateProfile']);
+const USER_ACTIONS = new Set<GameAction['type']>(['completeOnboarding', 'addWater', 'undoWater', 'setCheckIn', 'recordSelfie', 'removeSelfie', 'updateProfile', 'wake']);
 
 function reduceAction(state: GameState, action: GameAction): GameResult {
   switch (action.type) {
@@ -78,6 +79,9 @@ function reduceAction(state: GameState, action: GameAction): GameResult {
       return ok(createInitialState());
     case 'restore':
       return syncDay(action.state, action.now);
+    case 'wake':
+      // An interaction with no other effect; the wrapper stamps lastActiveAt.
+      return ok({ ...syncDay(state, action.now).state });
   }
 }
 
@@ -99,40 +103,27 @@ function fail(state: GameState, code: ErrorCode, message: string): GameResult {
 export function syncDay(state: GameState, now: number): GameResult {
   const today = dateKey(now);
   if (state.today.date === today) return ok(state);
+  // The clock moved backwards (travel, or a manual change): keep working on the
+  // stored day rather than wiping its record and re-rolling it later.
+  if (state.today.date && today < state.today.date) return ok(state);
   const events: GameEvent[] = [];
   let history = state.history;
   let next = state;
-  if (state.today.date && state.createdOn) {
-    history = { ...history, [state.today.date]: getDailyRecord(state) };
-    events.push({ type: 'dayRolled', from: state.today.date, to: today });
-    next = protectStreak(state, state.today.date, today, events);
+  if (state.createdOn) {
+    if (state.today.date) {
+      history = { ...history, [state.today.date]: getDailyRecord(state) };
+      events.push({ type: 'dayRolled', from: state.today.date, to: today });
+    }
+    // Spend freezes on the days that have just ended, in order; the first uncovered miss ends the streak.
+    const from = lastRecordedDate(state);
+    if (from && from < today) {
+      const p = projectStreak(state, from, today);
+      for (const date of p.used) events.push({ type: 'freezeUsed', date });
+      if (p.lost) events.push({ type: 'streakLost', previous: p.lost });
+      next = { ...next, progress: { ...next.progress, frozenDays: p.frozenDays, streakFreezes: p.freezes } };
+    }
   }
   return ok({ ...next, history, today: emptyDay(today) }, events);
-}
-
-/**
- * Walks the days that have just ended (from the outgoing day up to yesterday)
- * and spends a freeze on each missed day while the streak is alive and a
- * freeze is held. The first uncovered miss ends the streak.
- */
-function protectStreak(state: GameState, from: string, today: string, events: GameEvent[]): GameState {
-  let next = state;
-  let d = from;
-  for (let guard = 0; guard < 400 && d < today; guard++, d = shiftDateKey(d, 1)) {
-    if (countsForStreak(next, d)) continue;
-    const alive = streakEndingOn(next, shiftDateKey(d, -1));
-    if (alive === 0) return next;
-    if (next.progress.streakFreezes <= 0) {
-      events.push({ type: 'streakLost', previous: alive });
-      return next;
-    }
-    next = {
-      ...next,
-      progress: { ...next.progress, streakFreezes: next.progress.streakFreezes - 1, frozenDays: [...next.progress.frozenDays, d].sort() },
-    };
-    events.push({ type: 'freezeUsed', date: d });
-  }
-  return next;
 }
 
 /* ----------------------------- onboarding ---------------------------- */
@@ -312,6 +303,9 @@ function recordActivity(state: GameState, steps: number, workoutMinutes: number,
     workoutMinutes: Math.max(0, Math.floor(Number.isFinite(workoutMinutes) ? workoutMinutes : 0)),
     syncedAt: now,
   };
+  const prev = synced.today.activity;
+  // Same numbers as the last read: nothing to store, so nothing re-renders, persists or reloads the widget.
+  if (prev && prev.steps === activity.steps && prev.workoutMinutes === activity.workoutMinutes && synced === state) return ok(synced, events);
   const next: GameState = { ...synced, today: { ...synced.today, activity } };
   return applyActivity(next, events, now);
 }

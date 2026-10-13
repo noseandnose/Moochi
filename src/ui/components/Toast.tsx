@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,9 +28,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   const value = useMemo(() => show, [show]);
+  // iOS modal sheets are presented above the root view, so the host must sit in a window-level overlay to stay visible.
+  const Host = Platform.OS === 'ios' ? FullWindowOverlay : React.Fragment;
   return (
     <ToastContext.Provider value={value}>
       {children}
+      <Host>
       <View pointerEvents="none" style={[styles.host, { bottom: insets.bottom + 92 }]}>
         {toast ? (
           <Animated.View
@@ -46,6 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           </Animated.View>
         ) : null}
       </View>
+      </Host>
     </ToastContext.Provider>
   );
 }

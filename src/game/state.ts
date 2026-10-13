@@ -1,5 +1,5 @@
 import { DEFAULTS, GEAR_BY_ID, PET_BY_ID, SCHEMA_VERSION, STREAK } from './constants';
-import { isDateKey } from './date';
+import { dateKey, isDateKey } from './date';
 import type {
   DailyActivity,
   DailyRecord,
@@ -89,13 +89,17 @@ export type LoadOutcome =
  * fields fall back to defaults field-by-field so one bad value never wipes
  * valid progress. Returns `corrupt` only when the payload is unusable.
  */
-export function loadState(raw: unknown): LoadOutcome {
+export function loadState(raw: unknown, now: number = Date.now()): LoadOutcome {
   if (raw === null || raw === undefined) return { kind: 'fresh' };
   if (typeof raw !== 'object' || Array.isArray(raw)) {
     return { kind: 'corrupt', state: createInitialState(), reason: 'not an object' };
   }
   let data = { ...(raw as Record<string, unknown>) };
   const startVersion = typeof data.schemaVersion === 'number' ? data.schemaVersion : 0;
+  if (startVersion > SCHEMA_VERSION) {
+    // Written by a newer MOCHI: loading it here would silently drop what we do not understand.
+    return { kind: 'corrupt', state: createInitialState(), reason: 'newer schema' };
+  }
   let migrated = false;
   for (let v = startVersion; v < SCHEMA_VERSION; v++) {
     const step = MIGRATIONS[v];
@@ -104,25 +108,29 @@ export function loadState(raw: unknown): LoadOutcome {
       migrated = true;
     }
   }
-  const state = sanitize(data);
+  const state = sanitize(data, now);
   if (startVersion !== SCHEMA_VERSION) migrated = true;
   return { kind: 'ok', state, migrated };
 }
 
-export function sanitize(data: Record<string, unknown>): GameState {
+export function sanitize(data: Record<string, unknown>, now: number = Date.now()): GameState {
   const base = createInitialState();
+  const todayKey = dateKey(now);
   const profile = sanitizeProfile(data.profile, base.profile);
   const prefs = sanitizePrefs(data.prefs, base.prefs);
-  const progress = sanitizeProgress(data.progress, base.progress);
+  const progress = sanitizeProgress(data.progress, base.progress, todayKey);
   const today = sanitizeToday(data.today);
   const ledger = sanitizeLedger(data.ledger);
   const history = sanitizeHistory(data.history);
   const selfies = sanitizeSelfies(data.selfies);
   const createdOn = isDateKey(data.createdOn) ? data.createdOn : null;
-  const lastActiveAt = Math.floor(num(data.lastActiveAt, 0, 0));
+  // Activity cannot be in the future; a forged timestamp would keep the pet awake forever.
+  const lastActiveAt = Math.floor(num(data.lastActiveAt, 0, 0, now));
   return { schemaVersion: SCHEMA_VERSION, createdOn, profile, prefs, progress, today, ledger, history, selfies, lastActiveAt };
 }
 
+/** Plain file names only: no separators, no `.` or `..`, so a stored name can never escape the selfies folder. */
+export const SELFIE_FILE = /^[\w-]+(\.[\w-]+)*$/;
 const PET_IDS: PetId[] = ['tofu', 'juno', 'pebble', 'ori', 'fern'];
 const GENDERS: Gender[] = ['female', 'male', 'unspecified'];
 const UNITS: WaterUnit[] = ['ml', 'oz'];
@@ -195,7 +203,7 @@ function sanitizePrefs(raw: unknown, base: Prefs): Prefs {
   };
 }
 
-function sanitizeProgress(raw: unknown, base: Progress): Progress {
+function sanitizeProgress(raw: unknown, base: Progress, today: string): Progress {
   const p = obj(raw);
   const ownedRaw = Array.isArray(p.ownedGear) ? p.ownedGear : [];
   const owned = new Set<GearId>(['none']);
@@ -214,7 +222,8 @@ function sanitizeProgress(raw: unknown, base: Progress): Progress {
       eating: Math.floor(num(counts.eating, 0, 0, 1e6)),
     },
     streakFreezes: Math.floor(num(p.streakFreezes, 0, 0, STREAK.maxFreezes)),
-    frozenDays: Array.from(new Set((Array.isArray(p.frozenDays) ? p.frozenDays : []).filter(isDateKey))).sort(),
+    // A frozen day can only be a day that has already passed.
+    frozenDays: Array.from(new Set((Array.isArray(p.frozenDays) ? p.frozenDays : []).filter((d) => isDateKey(d) && d < today))).sort(),
   };
 }
 
@@ -258,7 +267,7 @@ function sanitizeSelfies(raw: unknown): SelfieRecord[] {
   const seen = new Set<string>();
   for (const item of raw) {
     const r = obj(item);
-    if (!isDateKey(r.date) || typeof r.file !== 'string' || !r.file.length || seen.has(r.date)) continue;
+    if (!isDateKey(r.date) || typeof r.file !== 'string' || !SELFIE_FILE.test(r.file) || seen.has(r.date)) continue;
     seen.add(r.date);
     out.push({ date: r.date, file: r.file.slice(0, 120), at: Math.floor(num(r.at, 0, 0)) });
   }

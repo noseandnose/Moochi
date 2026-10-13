@@ -52,7 +52,8 @@ export function HealthSettings() {
         if (events.some((e) => e.type === 'goalCompleted')) queue(events);
       }
       haptic('success');
-      toast(`${healthProviderName} connected.`);
+      // HealthKit never reports a read denial, so say where to look if nothing comes through.
+      toast(read && read.steps === 0 && read.workoutMinutes === 0 && Platform.OS === 'ios' ? 'Connected. If steps stay at 0, check Health → Sharing → Apps → MOCHI.' : `${healthProviderName} connected.`);
     } finally {
       setBusy(false);
     }
@@ -65,6 +66,7 @@ export function HealthSettings() {
       return;
     }
     setStepsError(null);
+    if (n === state.profile.stepTarget) return; // tapping away without a change is not a save
     const events = dispatch({ type: 'updateProfile', patch: { stepTarget: n }, now: now() });
     if (events.some((e) => e.type === 'goalCompleted')) queue(events);
     haptic('success');

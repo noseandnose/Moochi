@@ -87,7 +87,7 @@ describe('streaks', () => {
     const s = grindDays(onboarded(), 7);
     const rolled = reduce(s, { type: 'sync', now: day(9) }).state;
     const json = JSON.parse(JSON.stringify(rolled));
-    const loaded = loadState(json);
+    const loaded = loadState(json, day(9));
     if (loaded.kind !== 'ok') throw new Error(`expected ok, got ${loaded.kind}`);
     expect(loaded.state.progress.frozenDays).toEqual(rolled.progress.frozenDays);
     expect(getStreakInfo(loaded.state, day(9)).current).toBe(8);

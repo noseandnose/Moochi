@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 
+import { ANDROID_WIDGET_KEY, ANDROID_WIDGET_NAME } from './constants';
 import { MochiAndroidWidget, type AndroidWidgetData } from './MochiAndroidWidget';
 
-export const ANDROID_WIDGET_KEY = 'mochi.widget.v1';
-export const ANDROID_WIDGET_NAME = 'MochiWidget';
+export { ANDROID_WIDGET_KEY, ANDROID_WIDGET_NAME };
 
 async function readData(): Promise<AndroidWidgetData | null> {
   try {

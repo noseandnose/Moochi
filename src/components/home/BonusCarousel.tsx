@@ -52,7 +52,7 @@ export function BonusCarousel({ tiles, doneCount }: { tiles: BonusTile[]; doneCo
               accessibilityRole="tab"
               accessibilityLabel={`${BONUSES[i].title}${t.done ? ', done' : ''}`}
               accessibilityState={{ selected: page === i }}
-              hitSlop={8}
+              hitSlop={18}
               onPress={() => goTo(i)}
               style={[styles.dot, page === i && styles.dotActive, t.done && styles.dotDone]}
             />
@@ -125,9 +125,9 @@ function BonusCard({ tile }: { tile: BonusTile }) {
         </View>
       </Pressable>
       {tile.done ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${tile.title}`} onPress={tile.onOpen} hitSlop={8} style={styles.chevron}>
+        <View style={styles.chevron} pointerEvents="none">
           <ChevronRight size={20} color={colors.inkFaint} />
-        </Pressable>
+        </View>
       ) : (
         <Button label={tile.actionLabel} size="sm" variant={tile.needsSetup ? 'secondary' : 'primary'} onPress={tile.onAction} accessibilityLabel={`${tile.actionLabel}: ${tile.title}`} />
       )}

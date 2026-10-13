@@ -180,6 +180,8 @@ export type GameAction =
   | { type: 'updatePrefs'; patch: Partial<Prefs> }
   | { type: 'buyGear'; gear: GearId }
   | { type: 'buyFreeze' }
+  /** The player touched the pet: counts as activity (wakes a sleeping pet). */
+  | { type: 'wake'; now: number }
   | { type: 'equipGear'; gear: GearId }
   | { type: 'reset' }
   /** Replace everything with a validated backup, then roll to today. */

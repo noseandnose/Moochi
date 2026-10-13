@@ -1,4 +1,4 @@
-import { Canvas, FilterMode, Group, Image, MipmapMode, Rect, rect, useImage } from '@shopify/react-native-skia';
+import { Canvas, FilterMode, Group, Image, MipmapMode, Rect, rect } from '@shopify/react-native-skia';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 import {
@@ -15,6 +15,7 @@ import {
 import type { GearId, HabitPath, PetId, PetMood, StageId } from '@/game';
 
 import { CELL, SHEETS, SHEET_SIZE, eggCell, frameTable, moodCell, overlayCell, type Cell, type EggFrame, type Eyes } from './sprites';
+import { useCachedImage } from './useCachedImage';
 
 export interface PetSpriteHandle {
   /** Quick squash-and-stretch with happy eyes. */
@@ -54,7 +55,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
   { petId, stage, path, gear, size, animate = true, reduceMotion = false, staticEyes, mood, onFlash },
   ref,
 ) {
-  const sheet = useImage(SHEETS[petId]);
+  const sheet = useCachedImage(SHEETS[petId]);
   const scale = size / CELL;
   const frames = useMemo(() => frameTable(petId, stage), [petId, stage]);
   const [sheetW, sheetH] = SHEET_SIZE[petId];
@@ -71,6 +72,8 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
   const opacity = useSharedValue(1);
 
   const happyUntil = useRef(0);
+  // While a hatch or evolution drives the frames, the idle loop must not overwrite them.
+  const playing = useRef(false);
   const eggFrameRef = useRef<EggFrame>('idle');
   const moodFrame = useMemo(() => (mood ? moodCell(petId, stage, mood) : null), [petId, stage, mood]);
 
@@ -98,7 +101,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
       appActive = s === 'active';
     });
     const interval = setInterval(() => {
-      if (!appActive) return;
+      if (!appActive || playing.current) return;
       tick += 1;
       let cell: Cell;
       if (stage === 'egg') {
@@ -206,6 +209,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
 
   const hatchNow = () =>
     new Promise<void>((resolve) => {
+      playing.current = true;
       const seq: EggFrame[] = ['wobble_l', 'wobble_r', 'wobble_l', 'wobble_r', 'crack1', 'crack1', 'crack2', 'crack2', 'crack3', 'crack3'];
       const stepMs = reduceMotion ? 120 : 170;
       let i = 0;
@@ -230,6 +234,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
         setTimeout(() => {
           scaleX.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.back(2.2)) });
           scaleY.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.back(2.2)) });
+          playing.current = false;
           resolve();
         }, 120);
       };
@@ -245,6 +250,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
         setTimeout(resolve, 160);
         return;
       }
+      playing.current = true;
       // anticipation: shrink and brighten, then burst and pop to the new form
       scaleX.value = withTiming(0.86, { duration: 260 * dur });
       scaleY.value = withTiming(0.86, { duration: 260 * dur });
@@ -253,6 +259,7 @@ export const PetSprite = forwardRef<PetSpriteHandle, PetSpriteProps>(function Pe
         onFlash?.();
         scaleX.value = withSequence(withTiming(1.22, { duration: 220, easing: Easing.out(Easing.quad) }), withTiming(1, { duration: 320, easing: Easing.out(Easing.back(2)) }));
         scaleY.value = withSequence(withTiming(1.22, { duration: 220, easing: Easing.out(Easing.quad) }), withTiming(1, { duration: 320, easing: Easing.out(Easing.back(2)) }));
+        playing.current = false;
         resolve();
       }, 380);
     });

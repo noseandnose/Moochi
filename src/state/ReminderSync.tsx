@@ -1,7 +1,8 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 
-import { syncReminders } from '@/services/notifications';
+import { onReminderOpened, syncReminders } from '@/services/notifications';
 import { planReminders } from '@/services/reminderPlan';
 
 import { useGame } from './GameProvider';
@@ -14,6 +15,7 @@ import { useGame } from './GameProvider';
  */
 export function ReminderSync() {
   const { state, ready } = useGame();
+  const router = useRouter();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(state);
 
@@ -36,6 +38,14 @@ export function ReminderSync() {
     });
     return () => sub.remove();
   }, [ready]);
+
+  // A tapped water nudge opens the water log directly.
+  useEffect(() => {
+    if (!ready || Platform.OS === 'web') return;
+    return onReminderOpened((url) => {
+      if (url === '/today/water') router.push('/(tabs)/today/water');
+    });
+  }, [ready, router]);
 
   return null;
 }

@@ -1,15 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import {
-  createInitialState,
-  fromDateKey,
-  loadState,
-  reduce,
-  type GameAction,
-  type GameEvent,
-  type GameState,
-} from '@/game';
+import { createInitialState, fromDateKey, loadState, reduce, type GameAction, type GameEvent, type GameState } from '@/game';
+import { deleteAllSelfies } from '@/services/selfies';
 
 import { backupCorrupt, clearState, readRaw, writeState } from './storage';
 
@@ -22,6 +15,10 @@ interface GameContextValue {
   recoveredFromCorruptData: boolean;
   /** Days between the last recorded day and today at launch (0 when same day). */
   returnGapDays: number;
+  /** What the launch rollover did to the streak while the app was closed, if anything. */
+  launchNotice: string | null;
+  /** True once a save to disk has failed since launch. */
+  persistFailed: boolean;
   /** Replace the whole state (backup restore). */
   restore: (state: GameState) => void;
   dispatch: (action: GameAction) => GameEvent[];
@@ -30,11 +27,21 @@ interface GameContextValue {
 
 const GameContext = createContext<GameContextValue | null>(null);
 
+function describeLaunch(events: GameEvent[]): string | null {
+  const used = events.filter((e) => e.type === 'freezeUsed').length;
+  const lost = events.find((e) => e.type === 'streakLost');
+  if (lost && lost.type === 'streakLost') return `Your ${lost.previous}-day streak ended while you were away. Today starts a new one.`;
+  if (used > 0) return `A streak freeze covered ${used === 1 ? 'a missed day' : `${used} missed days`}, so your streak is still alive.`;
+  return null;
+}
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(createInitialState);
   const [ready, setReady] = useState(false);
   const [recovered, setRecovered] = useState(false);
   const [returnGapDays, setReturnGapDays] = useState(0);
+  const [launchNotice, setLaunchNotice] = useState<string | null>(null);
+  const [persistFailed, setPersistFailed] = useState(false);
   const listeners = useRef(new Set<Listener>());
   // The latest committed state, kept in a ref so dispatch can be synchronous.
   const stateRef = useRef<GameState>(state);
@@ -65,11 +72,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
       // Roll the day forward before the first render, remembering how long the player was away.
       const before = next.today.date;
-      next = reduce(next, { type: 'sync', now: Date.now() }).state;
+      const rolled = reduce(next, { type: 'sync', now: Date.now() });
+      next = rolled.state;
       if (next.createdOn && before && before !== next.today.date) {
         const gap = Math.round((fromDateKey(next.today.date).getTime() - fromDateKey(before).getTime()) / 86_400_000);
-        setReturnGapDays(gap);
+        setReturnGapDays(Math.max(0, gap));
       }
+      setLaunchNotice(describeLaunch(rolled.events));
       stateRef.current = next;
       setState(next);
       setReady(true);
@@ -79,10 +88,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Persist every change after hydration.
+  // Persist every change after hydration; a failed save is reported once.
   useEffect(() => {
     if (!ready) return;
-    writeState(state);
+    writeState(state).then((ok) => {
+      if (!ok) setPersistFailed(true);
+    });
   }, [state, ready]);
 
   const dispatch = useCallback((action: GameAction): GameEvent[] => {
@@ -92,8 +103,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     sink.push(...result.events);
     stateRef.current = result.state;
     setState(result.state);
+    if (action.type === 'reset' || action.type === 'restore') {
+      // Launch-time context belongs to the previous player.
+      setReturnGapDays(0);
+      setLaunchNotice(null);
+    }
     if (action.type === 'reset') {
       clearState();
+      deleteAllSelfies();
     }
     for (const l of listeners.current) l(sink, result.state, action);
     return sink;
@@ -127,8 +144,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<GameContextValue>(
-    () => ({ state, ready, recoveredFromCorruptData: recovered, returnGapDays, dispatch, subscribe, restore }),
-    [state, ready, recovered, returnGapDays, dispatch, subscribe, restore],
+    () => ({ state, ready, recoveredFromCorruptData: recovered, returnGapDays, launchNotice, persistFailed, dispatch, subscribe, restore }),
+    [state, ready, recovered, returnGapDays, launchNotice, persistFailed, dispatch, subscribe, restore],
   );
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }

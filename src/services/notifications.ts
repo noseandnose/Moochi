@@ -26,9 +26,15 @@ export interface PlannedReminder {
   at: Date;
   title: string;
   body: string;
+  /** Screen to open when the notification is tapped. */
+  url?: string;
 }
 
 const IDENTIFIER: Record<ReminderId, string> = { evening: 'mochi-daily-reminder', water: 'mochi-water-nudge', streak: 'mochi-streak-warning' };
+
+let chain: Promise<void> = Promise.resolve();
+let generation = 0;
+let lastApplied = '';
 
 /**
  * Replaces every scheduled MOCHI notification with the given plan. The plan
@@ -36,7 +42,24 @@ const IDENTIFIER: Record<ReminderId, string> = { evening: 'mochi-daily-reminder'
  * the pet actually needs when it fires; a stale one is cancelled by the next
  * sync rather than left to fire with old text.
  */
-export async function syncReminders(plan: PlannedReminder[]): Promise<boolean> {
+export function syncReminders(plan: PlannedReminder[]): Promise<boolean> {
+  // Re-plans arrive from the debounce, the foreground listener and health syncs at once;
+  // run them one after another and let a newer plan supersede an older one mid-flight.
+  const key = JSON.stringify(plan.map((r) => [r.id, r.at.getTime(), r.body]));
+  if (key === lastApplied) return Promise.resolve(true);
+  const mine = ++generation;
+  let ok = false;
+  chain = chain
+    .then(async () => {
+      if (mine !== generation) return;
+      ok = await applyPlan(plan);
+      if (ok) lastApplied = key;
+    })
+    .catch(() => undefined);
+  return chain.then(() => ok);
+}
+
+async function applyPlan(plan: PlannedReminder[]): Promise<boolean> {
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CHANNEL, {
@@ -50,7 +73,7 @@ export async function syncReminders(plan: PlannedReminder[]): Promise<boolean> {
       if (r.at.getTime() <= Date.now()) continue;
       await Notifications.scheduleNotificationAsync({
         identifier: IDENTIFIER[r.id],
-        content: { title: r.title, body: r.body, sound: false },
+        content: { title: r.title, body: r.body, sound: false, data: r.url ? { url: r.url } : undefined },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, channelId: CHANNEL },
       });
     }
@@ -62,8 +85,22 @@ export async function syncReminders(plan: PlannedReminder[]): Promise<boolean> {
 
 export async function cancelReminders(): Promise<void> {
   try {
+    lastApplied = '';
     await Notifications.cancelAllScheduledNotificationsAsync();
   } catch {
     // Nothing scheduled.
   }
+}
+
+/** Calls `open` with the deep link of a tapped reminder, including the one that launched the app. */
+export function onReminderOpened(open: (url: string) => void): () => void {
+  const handle = (response: Notifications.NotificationResponse | null) => {
+    const url = response?.notification.request.content.data?.url;
+    if (typeof url === 'string') open(url);
+  };
+  Notifications.getLastNotificationResponseAsync()
+    .then(handle)
+    .catch(() => undefined);
+  const sub = Notifications.addNotificationResponseReceivedListener(handle);
+  return () => sub.remove();
 }

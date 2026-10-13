@@ -55,6 +55,8 @@ export function ReminderSettings() {
       setError('Use 24-hour time, like 07:45 or 21:00.');
       return;
     }
+    setError(null);
+    if (hour === reminderHour && minute === reminderMinute) return; // blur after submit: nothing changed
     setTime(hour, minute);
   };
 

@@ -1,5 +1,5 @@
 import { Check, ChevronRight } from 'lucide-react-native';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -25,7 +25,13 @@ export interface GoalCardProps {
 export function GoalCard({ kind, title, detail, done, reward, actionLabel, onAction, onOpen, optional }: GoalCardProps) {
   const reduce = useReduceMotion();
   const pulse = useSharedValue(1);
+  // Pulse only when a card flips to done while on screen, not when a done card first mounts.
+  const mounted = useRef(false);
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (done && !reduce) {
       pulse.value = withSequence(withTiming(1.02, { duration: 140, easing: Easing.out(Easing.quad) }), withTiming(1, { duration: 260, easing: Easing.out(Easing.back(2)) }));
     }
@@ -67,9 +73,10 @@ export function GoalCard({ kind, title, detail, done, reward, actionLabel, onAct
         </View>
       </Pressable>
       {done ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Review ${title}`} onPress={onOpen} hitSlop={8} style={styles.chevron}>
+        // The whole row already opens details; a second tap right after Done must not navigate.
+        <View style={styles.chevron} pointerEvents="none">
           <ChevronRight size={20} color={colors.inkFaint} />
-        </Pressable>
+        </View>
       ) : (
         <Button label={actionLabel} size="sm" variant={kind === 'water' ? 'secondary' : 'primary'} onPress={onAction} accessibilityLabel={`${actionLabel}: ${title}`} />
       )}

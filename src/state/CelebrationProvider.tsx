@@ -1,6 +1,8 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import type { GameEvent } from '@/game';
+
+import { useGame } from './GameProvider';
 
 export interface Celebration {
   id: number;
@@ -8,27 +10,43 @@ export interface Celebration {
 }
 
 interface CelebrationContextValue {
+  /** The next celebration to present, oldest first. */
   pending: Celebration | null;
   /** Queue events for the Today screen to present (banner, pet reaction, haptic). */
   queue: (events: GameEvent[]) => void;
-  /** Mark the pending celebration as shown. */
+  /** Mark a celebration as shown so the next one can play. */
   consume: (id: number) => void;
 }
 
 const Ctx = createContext<CelebrationContextValue>({ pending: null, queue: () => undefined, consume: () => undefined });
 
+let counter = 0;
+
+/** A FIFO of celebrations: one plays at a time and none is lost while another is animating. */
 export function CelebrationProvider({ children }: { children: React.ReactNode }) {
-  const [pending, setPending] = useState<Celebration | null>(null);
-  const counter = useRef(0);
+  const [items, setItems] = useState<Celebration[]>([]);
+  const { subscribe } = useGame();
   const queue = useCallback((events: GameEvent[]) => {
-    const meaningful = events.filter((e) => e.type === 'reward' || e.type === 'stageChanged' || e.type === 'goalCompleted' || e.type === 'allGoalsCompleted' || e.type === 'streakExtended' || e.type === 'freezeEarned');
+    const meaningful = events.filter(
+      (e) => e.type === 'reward' || e.type === 'stageChanged' || e.type === 'goalCompleted' || e.type === 'allGoalsCompleted' || e.type === 'streakExtended' || e.type === 'freezeEarned',
+    );
     if (!meaningful.length) return;
-    counter.current += 1;
-    setPending({ id: counter.current, events: meaningful });
+    counter += 1;
+    const item = { id: counter, events: meaningful };
+    setItems((list) => [...list, item]);
   }, []);
   const consume = useCallback((id: number) => {
-    setPending((p) => (p && p.id === id ? null : p));
+    setItems((list) => list.filter((c) => c.id !== id));
   }, []);
+  // A reset or restore makes anything still queued meaningless.
+  useEffect(
+    () =>
+      subscribe((_events, _state, action) => {
+        if (action.type === 'reset' || action.type === 'restore') setItems([]);
+      }),
+    [subscribe],
+  );
+  const pending = items[0] ?? null;
   const value = useMemo(() => ({ pending, queue, consume }), [pending, queue, consume]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

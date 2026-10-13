@@ -7,6 +7,7 @@ import { BackupSettings } from '@/components/screens/BackupSettings';
 import { HealthSettings } from '@/components/screens/HealthSettings';
 import { ReminderSettings } from '@/components/screens/ReminderSettings';
 import { ProfileForm } from '@/components/screens/ProfileForm';
+import { useBack } from '@/hooks/useBack';
 import { useHaptics } from '@/hooks/useHaptics';
 import { now } from '@/hooks/useNow';
 import { useGame } from '@/state/GameProvider';
@@ -18,11 +19,11 @@ export default function Settings() {
   const { state, dispatch, recoveredFromCorruptData } = useGame();
   const toast = useToast();
   const haptic = useHaptics();
+  const back = useBack();
 
   const performReset = () => {
-    // Leave the modal first; the root layout then swaps to onboarding because
-    // the state is no longer onboarded.
-    if (router.canDismiss()) router.dismissAll();
+    // The root layout swaps to onboarding as soon as the state is no longer onboarded,
+    // which unmounts this modal; dismissing it here too would fight that transition.
     dispatch({ type: 'reset' });
     haptic('warning');
   };
@@ -49,7 +50,7 @@ export default function Settings() {
       subtitle="Your goals, your pace."
       keyboard
       headerRight={
-        <IconButton label="Close settings" onPress={() => router.back()}>
+        <IconButton label="Close settings" onPress={back}>
           <X size={22} color={colors.ink} />
         </IconButton>
       }
@@ -87,7 +88,6 @@ export default function Settings() {
             }
             haptic('success');
             toast('Your goals are saved.');
-            router.back();
           }}
         />
       </Card>
@@ -118,7 +118,7 @@ export default function Settings() {
       </Card>
 
       <SectionHeading title="Backup" />
-      <BackupSettings onRestored={() => router.back()} />
+      <BackupSettings onRestored={back} />
 
       <SectionHeading title="Your data" />
       <Card tone="muted" elevated={false} style={{ gap: spacing.sm }}>
@@ -131,9 +131,16 @@ export default function Settings() {
         <Text variant="small" tone="soft">
           Water targets are editable starting points, not medical advice.
         </Text>
+        <Button label="Privacy policy" variant="secondary" size="sm" onPress={() => router.push('/privacy')} style={{ alignSelf: 'flex-start', marginTop: spacing.xs }} />
       </Card>
-      <Button label="Privacy" variant="secondary" full onPress={() => router.push('/privacy')} />
-      <Button label="Reset all progress" variant="danger" full onPress={confirmReset} />
+
+      <SectionHeading title="Danger zone" />
+      <Card tone="muted" elevated={false} style={{ gap: spacing.sm }}>
+        <Text variant="small" tone="soft">
+          Removes your pet, XP, coins, gear, photos and history from this device. Export a backup first if you might want it back.
+        </Text>
+        <Button label="Reset all progress" variant="danger" full onPress={confirmReset} />
+      </Card>
       <Text variant="small" tone="muted" align="center">
         MOCHI · Build habits. Level up.
       </Text>

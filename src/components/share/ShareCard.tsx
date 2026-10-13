@@ -11,16 +11,16 @@ import {
   rrect,
   useCanvasRef,
   useFont,
-  useImage,
   type CanvasRef,
   type SkFont,
 } from '@shopify/react-native-skia';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useEffect, useMemo } from 'react';
 
 import type { GearId, HabitPath, PetId, StageId } from '@/game';
 import { colors } from '@/ui/theme';
 
 import { CELL, SHEETS, SHEET_SIZE, bodyCell, overlayCell } from '../pet/sprites';
+import { useCachedImage } from '../pet/useCachedImage';
 
 export const CARD_W = 320;
 export const CARD_H = 440;
@@ -45,6 +45,8 @@ export interface ShareCardProps {
   level: number;
   stageName: string;
   pathName: string;
+  /** Reports when every image and font the card draws has loaded. */
+  onReady?: (ready: boolean) => void;
 }
 
 export { useCanvasRef };
@@ -54,14 +56,18 @@ export type { CanvasRef };
  * The shareable pet card. Deliberately contains no habit data: only the pet,
  * its name, level, stage and path.
  */
-export const ShareCard = forwardRef<CanvasRef, ShareCardProps>(function ShareCard({ petId, stage, path, gear, name, level, stageName, pathName }, ref) {
-  const sheet = useImage(SHEETS[petId]);
-  const logo = useImage(logoSource);
+export const ShareCard = forwardRef<CanvasRef, ShareCardProps>(function ShareCard({ petId, stage, path, gear, name, level, stageName, pathName, onReady }, ref) {
+  const sheet = useCachedImage(SHEETS[petId]);
+  const logo = useCachedImage(logoSource);
   const [sheetW, sheetH] = SHEET_SIZE[petId];
   const nameFont = useFont(interBold, 30);
   const metaFont = useFont(interRegular, 15);
   const lineFont = useFont(interBold, 13);
   const fonts = { name: nameFont, meta: metaFont, line: lineFont };
+  const ready = !!(sheet && logo && nameFont && metaFont && lineFont);
+  useEffect(() => {
+    onReady?.(ready);
+  }, [ready, onReady]);
 
   const spriteSize = 216;
   const scale = spriteSize / CELL;

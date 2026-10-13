@@ -5,6 +5,7 @@ export interface PlannedReminder {
   at: Date;
   title: string;
   body: string;
+  url?: string;
 }
 
 export async function ensureNotificationPermission(): Promise<boolean> {
@@ -16,3 +17,7 @@ export async function syncReminders(_plan: PlannedReminder[]): Promise<boolean> 
 }
 
 export async function cancelReminders(): Promise<void> {}
+
+export function onReminderOpened(_open: (url: string) => void): () => void {
+  return () => undefined;
+}

@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-import { SCHEMA_VERSION, loadState, type GameState } from '@/game';
+import { SCHEMA_VERSION, loadState, type GameState, SELFIE_FILE } from '@/game';
 
 import { selfieUri } from './selfies';
 
@@ -67,6 +67,9 @@ export async function importBackup(): Promise<ImportResult> {
   if (!data || typeof data !== 'object' || data.format !== BACKUP_FORMAT || !data.state) {
     return { kind: 'invalid', reason: 'That file is not a MOCHI backup.' };
   }
+  if (typeof data.schemaVersion === 'number' && data.schemaVersion > SCHEMA_VERSION) {
+    return { kind: 'invalid', reason: 'This backup was made by a newer version of MOCHI. Update the app, then try again.' };
+  }
   const outcome = loadState(data.state);
   if (outcome.kind !== 'ok') return { kind: 'invalid', reason: 'The backup could not be read.' };
   let photos = 0;
@@ -75,7 +78,7 @@ export async function importBackup(): Promise<ImportResult> {
   const entries = data.photos && typeof data.photos === 'object' ? Object.entries(data.photos) : [];
   const kept = new Set<string>();
   for (const [name, base64] of entries) {
-    if (typeof base64 !== 'string' || !/^[\w.-]+$/.test(name)) continue;
+    if (typeof base64 !== 'string' || !SELFIE_FILE.test(name)) continue;
     try {
       const f = new File(dir, name);
       try {

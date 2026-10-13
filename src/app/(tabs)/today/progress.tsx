@@ -94,7 +94,7 @@ export default function Progress() {
                   <Text variant="caption" tone="muted" numberOfLines={1} style={{ flex: 1 }}>
                     {formatDate(s.date).toUpperCase()}
                   </Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Remove photo from ${formatDate(s.date)}`} hitSlop={10} onPress={() => remove(s.date, s.file)}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Remove photo from ${formatDate(s.date)}`} hitSlop={16} onPress={() => remove(s.date, s.file)}>
                     <Trash2 size={14} color={colors.inkFaint} />
                   </Pressable>
                 </View>

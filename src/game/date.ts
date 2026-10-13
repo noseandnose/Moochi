@@ -15,7 +15,9 @@ export function fromDateKey(key: string): Date {
 }
 
 export function isDateKey(value: unknown): value is string {
-  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  // Reject impossible dates such as 2026-13-45: a real key round-trips through Date.
+  return dateKey(fromDateKey(value)) === value;
 }
 
 /** Keys for the last `count` local days ending today, oldest first. */

@@ -66,6 +66,8 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, s
     return null;
   }, [targetText, unit]);
 
+  const nameError = showName && !petName.trim() ? 'Give your pet a name.' : null;
+
   const minutesError = useMemo(() => {
     const n = Number(minutesText);
     if (!/^\d+$/.test(minutesText.trim()) || !Number.isFinite(n)) return 'Enter whole minutes.';
@@ -84,9 +86,11 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, s
   };
 
   const onUnit = (u: WaterUnit) => {
-    // Presentation only: the stored millilitre target does not change.
+    // Presentation only. The millilitre value stays the source of truth unless
+    // the text was edited, so ml -> oz -> ml never drifts by rounding.
     const n = parseAmount(targetText);
-    const ml = n !== null ? toMl(n, unit) : targetMl;
+    const edited = n !== null && targetText.trim() !== targetToText(targetMl, unit);
+    const ml = edited ? toMl(n, unit) : targetMl;
     setTargetMl(ml);
     setUnit(u);
     setTargetText(targetToText(ml, u));
@@ -103,12 +107,13 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, s
   const submit = () => {
     setTouched(true);
     const n = parseAmount(targetText);
-    if (targetError || minutesError || n === null) return;
+    if (targetError || minutesError || nameError || n === null) return;
+    const edited = targetText.trim() !== targetToText(targetMl, unit);
     onSubmit({
       petName: petName.trim(),
       gender,
       waterUnit: unit,
-      waterTargetMl: toMl(n, unit),
+      waterTargetMl: edited ? toMl(n, unit) : targetMl,
       movementMinutes: Number(minutesText),
       eatingGoal: eatingGoal.trim(),
       ...(showCustomGoal ? { customGoal: customGoal.trim() } : {}),
@@ -118,7 +123,7 @@ export function ProfileForm({ initial, submitLabel, onSubmit, showName = true, s
   return (
     <View style={styles.form}>
       {showName ? (
-        <Field label="Pet name" value={petName} onChangeText={setPetName} maxLength={DEFAULTS.maxPetNameLength} autoCapitalize="words" autoCorrect={false} returnKeyType="done" />
+        <Field label="Pet name" value={petName} onChangeText={setPetName} maxLength={DEFAULTS.maxPetNameLength} autoCapitalize="words" autoCorrect={false} returnKeyType="done" error={touched ? nameError : null} />
       ) : null}
       <Segmented<Gender>
         label="Gender"

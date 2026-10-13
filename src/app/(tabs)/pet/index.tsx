@@ -22,6 +22,7 @@ export default function MyPet() {
   const [preview, setPreview] = useState<GearId | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [nameDraft, setNameDraft] = useState(state.profile.petName);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const stage = getStage(state);
   const path = getVisualPath(state);
@@ -49,12 +50,17 @@ export default function MyPet() {
   };
 
   const saveName = () => {
+    if (!nameDraft.trim()) {
+      setNameError('Give your pet a name.');
+      return;
+    }
     const events = dispatch({ type: 'renamePet', name: nameDraft });
     const error = events.find((e) => e.type === 'error');
     if (error?.type === 'error') {
-      toast(error.message, 'danger');
+      setNameError(error.message);
       return;
     }
+    setNameError(null);
     setRenaming(false);
     haptic('success');
     toast('Name saved.');
@@ -66,7 +72,20 @@ export default function MyPet() {
         {renaming ? (
           <View style={styles.rename}>
             <View style={{ flex: 1 }}>
-              <Field label="Pet name" value={nameDraft} onChangeText={setNameDraft} maxLength={DEFAULTS.maxPetNameLength} autoFocus autoCapitalize="words" returnKeyType="done" onSubmitEditing={saveName} />
+              <Field
+                label="Pet name"
+                value={nameDraft}
+                onChangeText={(t) => {
+                  setNameDraft(t);
+                  if (nameError) setNameError(null);
+                }}
+                error={nameError}
+                maxLength={DEFAULTS.maxPetNameLength}
+                autoFocus
+                autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={saveName}
+              />
             </View>
             <Button label="Save" size="sm" onPress={saveName} style={{ marginTop: 26 }} />
             <Button label="Cancel" size="sm" variant="ghost" onPress={() => setRenaming(false)} style={{ marginTop: 26 }} />
@@ -88,7 +107,7 @@ export default function MyPet() {
                 }}
               />
             </View>
-            <Pill label={`${coins} coins`} tone="coin" icon={<CoinIcon />} accessibilityLabel={`${state.progress.coins} coins`} />
+            <Pill label={`${coins} ${coins === 1 ? 'coin' : 'coins'}`} tone="coin" icon={<CoinIcon />} accessibilityLabel={`${state.progress.coins} coins`} />
           </>
         )}
       </View>

@@ -11,7 +11,7 @@ let loaded: WidgetModule | null | undefined;
 
 /** expo-widgets needs a development build; in Expo Go the native module is missing. */
 function loadWidget(): WidgetModule | null {
-  if (loaded !== undefined) return loaded;
+  if (loaded) return loaded;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { widgetsDirectory } = require('expo-widgets') as { widgetsDirectory: string };
@@ -28,6 +28,7 @@ export const widgetSupported = true;
 
 let lastImageKey = '';
 let lastImageUri: string | null = null;
+let lastPayload = '';
 
 /**
  * Writes the pet image into the shared app-group directory and pushes a new
@@ -53,7 +54,7 @@ export async function syncWidget(state: GameState): Promise<void> {
       lastImageKey = imageKey;
     }
   }
-  widget.updateSnapshot({
+  const props: MochiWidgetProps = {
     petName: snapshot.petName,
     stageName: snapshot.stageName,
     completed: snapshot.completed,
@@ -64,5 +65,9 @@ export async function syncWidget(state: GameState): Promise<void> {
     waterDone: snapshot.waterDone,
     movementDone: snapshot.movementDone,
     eatingDone: snapshot.eatingDone,
-  });
+  };
+  const payload = JSON.stringify(props);
+  if (payload === lastPayload) return; // every WidgetKit reload counts against a daily budget
+  lastPayload = payload;
+  widget.updateSnapshot(props);
 }

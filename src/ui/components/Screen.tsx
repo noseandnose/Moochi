@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Settings } from 'lucide-react-native';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '../theme';
@@ -25,15 +26,21 @@ export interface ScreenProps extends ScrollViewProps {
 export function Screen({ title, subtitle, back, settings, headerRight, inTabs, keyboard, children, contentContainerStyle, ...rest }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const body = (
-    <ScrollView
+  // Screens with inputs scroll the focused field clear of the keyboard on both platforms.
+  const Scroller = keyboard ? KeyboardAwareScrollView : ScrollView;
+  return (
+    <Scroller
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      bottomOffset={keyboard ? 24 : undefined}
       {...rest}
       style={[styles.scroll, rest.style]}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + (inTabs ? spacing.sm : spacing.md), paddingBottom: (inTabs ? spacing.xl : insets.bottom + spacing.xl) + spacing.lg },
+        {
+          paddingTop: insets.top + (inTabs ? spacing.sm : spacing.md),
+          paddingBottom: (inTabs ? spacing.xl : insets.bottom + spacing.xl) + spacing.lg,
+        },
         contentContainerStyle,
       ]}
     >
@@ -67,24 +74,26 @@ export function Screen({ title, subtitle, back, settings, headerRight, inTabs, k
         </View>
       ) : null}
       {children}
-    </ScrollView>
+    </Scroller>
   );
-  if (keyboard) {
-    return (
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {body}
-      </KeyboardAvoidingView>
-    );
-  }
-  return body;
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: spacing.screen, gap: spacing.lg },
-  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.sm, minHeight: 48 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    minHeight: 48,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
   titles: { flex: 1, gap: 2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });
@@ -101,5 +110,10 @@ export function SectionHeading({ title, action }: { title: string; action?: Reac
 }
 
 const sectionStyles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
 });

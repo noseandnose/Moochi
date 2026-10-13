@@ -9,7 +9,7 @@ describe('persistence and migrations', () => {
 
   test('round-trips a real state through JSON unchanged', () => {
     const s = grindDays(onboarded(), 2);
-    const out = loadState(JSON.parse(JSON.stringify(s)));
+    const out = loadState(JSON.parse(JSON.stringify(s)), s.lastActiveAt + 1);
     expect(out.kind).toBe('ok');
     if (out.kind === 'ok') {
       expect(out.state).toEqual(s);

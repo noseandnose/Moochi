@@ -8,7 +8,7 @@ import {
   STAGES,
   STAGE_INDEX,
 } from './constants';
-import { dateKey, dateKeyToNumber, recentDateKeys, shiftDateKey } from './date';
+import { dateKey, dateKeyToNumber, fromDateKey, recentDateKeys, shiftDateKey } from './date';
 import type { BonusId, DailyRecord, GameState, GoalId, HabitPath, PetMood, SelfieRecord, StageId } from './types';
 import { isWaterTargetReached, waterPercent } from './water';
 
@@ -175,7 +175,7 @@ export function moodLine(mood: PetMood, petName: string): string {
     case 'hungry':
       return `${petName} is hungry. Check in on eating well.`;
     case 'lazy':
-      return `${petName} feels lazy. Log some movement.`;
+      return `${petName} is restless. Log some movement.`;
     case 'content':
       return `${petName} is happy. All three goals done.`;
   }
@@ -255,14 +255,53 @@ export interface StreakInfo {
   perfectDays: number;
 }
 
+/**
+ * The freeze bookkeeping the day rollover performs, as a pure projection:
+ * walks the days from `from` up to (not including) `today`, spending a
+ * freeze on each missed day while the streak is alive. The first uncovered
+ * miss ends the streak. Used by the reducer at rollover and by selectors
+ * that run before the rollover has been applied.
+ */
+export function projectStreak(state: GameState, from: string, today: string): { frozenDays: string[]; freezes: number; used: string[]; lost: number } {
+  let frozenDays = state.progress.frozenDays;
+  let freezes = state.progress.streakFreezes;
+  const used: string[] = [];
+  let d = from;
+  for (let guard = 0; guard < 400 && d < today; guard++, d = shiftDateKey(d, 1)) {
+    if (isActiveDay(state, d) || frozenDays.includes(d)) continue;
+    const projected: GameState = { ...state, progress: { ...state.progress, frozenDays } };
+    const alive = streakEndingOn(projected, shiftDateKey(d, -1));
+    if (alive === 0) break;
+    if (freezes <= 0) return { frozenDays, freezes, used, lost: alive };
+    freezes -= 1;
+    frozenDays = [...frozenDays, d].sort();
+    used.push(d);
+  }
+  return { frozenDays, freezes, used, lost: 0 };
+}
+
+/** The last day the game has a record for: today's date, else the newest ledger or history key. */
+export function lastRecordedDate(state: GameState): string | null {
+  if (state.today.date) return state.today.date;
+  const keys = [...Object.keys(state.ledger), ...Object.keys(state.history)].sort();
+  return keys.length ? keys[keys.length - 1] : state.createdOn;
+}
+
 export function getStreakInfo(state: GameState, now: number): StreakInfo {
   const today = dateKey(now);
-  const todayActive = isActiveDay(state, today);
-  const current = todayActive ? streakEndingOn(state, today) : streakEndingOn(state, shiftDateKey(today, -1));
-  const freezes = state.progress.streakFreezes;
+  // Before the day has rolled over, read the streak as the rollover will leave it.
+  const from = lastRecordedDate(state);
+  let view = state;
+  if (state.createdOn && from && from < today) {
+    const p = projectStreak(state, from, today);
+    view = { ...state, progress: { ...state.progress, frozenDays: p.frozenDays, streakFreezes: p.freezes } };
+  }
+  const todayActive = isActiveDay(view, today);
+  const current = todayActive ? streakEndingOn(view, today) : streakEndingOn(view, shiftDateKey(today, -1));
+  const freezes = view.progress.streakFreezes;
   return {
     current,
-    best: Math.max(current, bestStreak(state)),
+    best: Math.max(current, bestStreak(view)),
     todayActive,
     atRisk: !todayActive && current > 0,
     freezes,
@@ -275,16 +314,14 @@ export function getStreakInfo(state: GameState, now: number): StreakInfo {
 function bestStreak(state: GameState): number {
   const days = new Set<string>(state.progress.frozenDays);
   for (const [date, day] of Object.entries(state.ledger)) if (day.water || day.movement || day.eating) days.add(date);
+  // One Date per day, sorted; consecutive days are exactly one day apart at local noon.
+  const times = Array.from(days, (d) => fromDateKey(d).getTime()).sort((a, b) => a - b);
   let best = 0;
-  for (const d of days) {
-    if (days.has(shiftDateKey(d, -1))) continue; // not the start of a run
-    let n = 0;
-    let cur = d;
-    while (days.has(cur)) {
-      n += 1;
-      cur = shiftDateKey(cur, 1);
-    }
-    best = Math.max(best, n);
+  let run = 0;
+  for (let i = 0; i < times.length; i++) {
+    const gap = i === 0 ? 0 : Math.round((times[i] - times[i - 1]) / 86_400_000);
+    run = i === 0 || gap !== 1 ? 1 : run + 1;
+    best = Math.max(best, run);
   }
   return best;
 }

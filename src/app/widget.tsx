@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { useBack } from '@/hooks/useBack';
 import { useHaptics } from '@/hooks/useHaptics';
 import { canPinWidget, pinWidget } from '@/services/widgetPin';
 import { useGame } from '@/state/GameProvider';
@@ -23,7 +23,7 @@ const ANDROID_STEPS = [
 ];
 
 export default function WidgetHowTo() {
-  const router = useRouter();
+  const back = useBack();
   const { state, dispatch } = useGame();
   const toast = useToast();
   const haptic = useHaptics();
@@ -42,7 +42,7 @@ export default function WidgetHowTo() {
       title="Home screen widget"
       subtitle={`${pet}, always one glance away.`}
       headerRight={
-        <IconButton label="Close" onPress={() => router.back()}>
+        <IconButton label="Close" onPress={back}>
           <X size={22} color={colors.ink} />
         </IconButton>
       }

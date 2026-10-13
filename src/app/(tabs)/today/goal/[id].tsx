@@ -1,10 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Check, Footprints, Undo2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { GoalTile, type TileKind } from '@/components/icons';
 import { DEFAULTS, getDailyChallenge } from '@/game';
+import { useBack } from '@/hooks/useBack';
 import { useHaptics } from '@/hooks/useHaptics';
 import { now, useTodayKey } from '@/hooks/useNow';
 import { useCelebration } from '@/state/CelebrationProvider';
@@ -17,7 +18,7 @@ type CheckIn = 'movement' | 'eating' | 'bonus' | 'custom';
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const goal: CheckIn = id === 'eating' || id === 'bonus' || id === 'custom' ? id : 'movement';
-  const router = useRouter();
+  const back = useBack();
   const { state, dispatch } = useGame();
   const { queue } = useCelebration();
   const toast = useToast();
@@ -58,14 +59,14 @@ export default function GoalDetail() {
     }
     queue(events);
     haptic('success');
-    router.back();
+    back();
   };
 
   const undo = () => {
     dispatch({ type: 'setCheckIn', goal, done: false, now: now() });
     haptic('select');
     toast(claimed ? 'Check-in undone. Rewards already earned today stay with you.' : 'Check-in undone.');
-    router.back();
+    back();
   };
 
   const saveGoal = () => {
@@ -75,8 +76,12 @@ export default function GoalDetail() {
       toast(error.message, 'danger');
       return;
     }
-    haptic('success');
-    toast(goalDraft.trim() ? 'Goal saved.' : 'Goal cleared.');
+    const before = state.profile.customGoal;
+    const after = goalDraft.trim();
+    if (after !== before) {
+      haptic('success');
+      toast(after ? 'Goal saved.' : 'Goal cleared.');
+    }
     setEditing(false);
   };
 

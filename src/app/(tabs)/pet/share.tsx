@@ -20,6 +20,7 @@ export default function SharePet() {
   const haptic = useHaptics();
   const canvas = useCanvasRef();
   const [busy, setBusy] = useState<'share' | 'save' | null>(null);
+  const [ready, setReady] = useState(false);
 
   const stage = getStage(state);
   const level = getLevel(state);
@@ -93,11 +94,11 @@ export default function SharePet() {
   return (
     <Screen title="Share your pet" subtitle="Show your pet. Keep your habits private." back>
       <View style={styles.cardWrap} accessible accessibilityLabel={`Pet card: ${state.profile.petName}, level ${level}, ${stageName}, ${pathName} path`}>
-        <ShareCard ref={canvas} petId={state.profile.petId} stage={stage} path={path} gear={state.progress.equippedGear} name={state.profile.petName} level={level} stageName={stageName} pathName={pathName} />
+        <ShareCard ref={canvas} petId={state.profile.petId} stage={stage} path={path} gear={state.progress.equippedGear} name={state.profile.petName} level={level} stageName={stageName} pathName={pathName} onReady={setReady} />
       </View>
-      <Button label="Share card" size="lg" full icon={<Share2 size={18} color={colors.surface} />} loading={busy === 'share'} onPress={share} />
+      <Button label={ready ? 'Share card' : 'Preparing card…'} size="lg" full icon={<Share2 size={18} color={colors.surface} />} loading={busy === 'share'} disabled={!ready} onPress={share} />
       <View style={styles.row}>
-        <Button label="Save image" variant="secondary" style={styles.half} icon={<ImageDown size={18} color={colors.ink} />} loading={busy === 'save'} onPress={save} />
+        <Button label="Save image" variant="secondary" style={styles.half} icon={<ImageDown size={18} color={colors.ink} />} loading={busy === 'save'} disabled={!ready} onPress={save} />
         <Button label="Share link" variant="secondary" style={styles.half} icon={<Link size={18} color={colors.ink} />} onPress={shareLink} />
       </View>
       <Card tone="muted" elevated={false}>

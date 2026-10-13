@@ -8,3 +8,5 @@ export async function saveSelfie(sourceUri: string, _date: string): Promise<stri
 }
 
 export async function deleteSelfie(_file: string): Promise<void> {}
+
+export async function deleteAllSelfies(): Promise<void> {}

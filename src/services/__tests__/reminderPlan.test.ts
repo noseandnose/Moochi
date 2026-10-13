@@ -26,11 +26,14 @@ describe('reminder planning', () => {
   test('the evening reminder moves on to eating, then movement, and goes quiet when all three are done', () => {
     const watered = run(withReminders(), { type: 'addWater', ml: 2000, now: at(9) }).state;
     expect(planReminders(watered, at(9)).find((p) => p.id === 'evening')!.body).toContain('hungry');
-    expect(ids(planReminders(watered, at(9)))).toEqual(['evening']); // water nudge dropped
+    const afterWater = planReminders(watered, at(9));
+    expect(ids(afterWater)).toEqual(['evening', 'water']);
+    expect(afterWater.find((p) => p.id === 'water')!.at.getDate()).toBe(14); // today's nudge dropped, tomorrow's planned
     const fed = run(watered, { type: 'setCheckIn', goal: 'eating', done: true, now: at(9) }).state;
     expect(planReminders(fed, at(9)).find((p) => p.id === 'evening')!.body).toContain('lazy');
     const done = run(fed, { type: 'setCheckIn', goal: 'movement', done: true, now: at(9) }).state;
-    expect(planReminders(done, at(9)).find((p) => p.id === 'evening')).toBeUndefined();
+    const evening = planReminders(done, at(9)).find((p) => p.id === 'evening')!;
+    expect(evening.at.getDate()).toBe(14); // nothing left today, so it moves to tomorrow
   });
 
   test('once a slot has passed it is planned for tomorrow with a line that is true at the start of a day', () => {
@@ -65,5 +68,24 @@ describe('reminder planning', () => {
   test('nudges can be turned off, leaving only the evening reminder', () => {
     const s = reduce(withReminders(), { type: 'updatePrefs', patch: { nudgesEnabled: false } }).state;
     expect(ids(planReminders(s, DAY1))).toEqual(['evening']);
+  });
+});
+
+describe('reminder planning across days', () => {
+  test('finishing early plans tomorrow instead of going silent', () => {
+    const done = run(withReminders(), { type: 'addWater', ml: 2000, now: at(9) }, { type: 'setCheckIn', goal: 'eating', done: true, now: at(9) }, { type: 'setCheckIn', goal: 'movement', done: true, now: at(9) }).state;
+    const plan = planReminders(done, at(9));
+    // The default 7:30 PM reminder is close to the 8:30 PM warning, so the streak line rides the evening reminder.
+    expect(ids(plan)).toEqual(['evening', 'water']);
+    for (const p of plan) expect(p.at.getDate()).toBe(14);
+    expect(plan.find((p) => p.id === 'water')!.body).toBe('Pip is thirsty. Time for the first glass of the day.');
+    expect(plan.find((p) => p.id === 'evening')!.body).toContain('Your 1-day streak ends at midnight.');
+  });
+
+  test('with the default 7:30 PM reminder the next-day evening line carries the streak warning', () => {
+    const s = withReminders(grindDays(onboarded(), 3));
+    const plan = planReminders(s, new Date(2026, 9, 15, 21).getTime());
+    expect(ids(plan)).toEqual(['evening', 'water']);
+    expect(plan.find((p) => p.id === 'evening')!.body).toBe('A new day for Pip. Three goals, one at a time. Your 3-day streak ends at midnight.');
   });
 });

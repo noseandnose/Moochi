@@ -1,4 +1,4 @@
-import { Canvas, FilterMode, Group, Image, MipmapMode, useImage } from '@shopify/react-native-skia';
+import { Canvas, FilterMode, Group, Image, MipmapMode } from '@shopify/react-native-skia';
 import { useIsFocused } from 'expo-router';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
@@ -10,6 +10,7 @@ import { colors, radius } from '@/ui/theme';
 
 import { Particles, type ParticlesHandle } from './Particles';
 import { PetSprite, type PetSpriteHandle } from './PetSprite';
+import { useCachedImage } from './useCachedImage';
 
 const SCENES: Record<PetId, { sky: number; far: number; near: number; ground: number }> = {
   tofu: {
@@ -86,10 +87,10 @@ export const PetStage = forwardRef<PetStageHandle, PetStageProps>(function PetSt
   const sprite = useRef<PetSpriteHandle>(null);
   const particles = useRef<ParticlesHandle>(null);
   const scene = SCENES[petId];
-  const sky = useImage(scene.sky);
-  const far = useImage(scene.far);
-  const near = useImage(scene.near);
-  const ground = useImage(scene.ground);
+  const sky = useCachedImage(scene.sky);
+  const far = useCachedImage(scene.far);
+  const near = useCachedImage(scene.near);
+  const ground = useCachedImage(scene.ground);
   const active = animate && focused;
 
   const onLayout = useCallback((e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width), []);
@@ -98,7 +99,8 @@ export const PetStage = forwardRef<PetStageHandle, PetStageProps>(function PetSt
   const drift = useSharedValue(0);
   useEffect(() => {
     if (!active || reduce) {
-      drift.value = 0;
+      // Ease back rather than snap: the stage is still visible under an incoming screen.
+      drift.value = withTiming(0, { duration: 600 });
       return;
     }
     drift.value = withRepeat(withTiming(1, { duration: 9000, easing: Easing.inOut(Easing.sin) }), -1, true);
