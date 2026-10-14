@@ -126,7 +126,8 @@
           "defaultChannel": "daily-reminder"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "./plugins/withWorkManager.js"
     ],
     "experiments": {
       "typedRoutes": true,
