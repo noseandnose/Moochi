@@ -131,6 +131,30 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.youchi.habits.widgets",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.youchi.habits"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "6bb0a6e5-34e6-4198-b265-1a266b2cf435"
+      }
+    },
+    "owner": "personal613"
   }
 }
