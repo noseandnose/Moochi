@@ -10,12 +10,12 @@ Done:
 - The website, live at https://noseandnose.github.io/youchi/ and republished on every push to `main`, with the privacy policy and a support page beside it.
 - Store identifiers: bundle id and package `com.youchi.habits`, scheme `youchi`, widget extension and App Group.
 - Store listing copy, privacy policy, deploy configuration (`eas.json`), icons and splash.
+- EAS project linked (`@personal613/youchi`), Android signing keystore generated and held by EAS, and the first Android development build produced: https://expo.dev/accounts/personal613/projects/youchi/builds
 
 Still to do, in order:
 
-1. Phase 0 accounts: Expo (free), Apple Developer ($99/year, a day or two to activate), Google Play ($25, identity verification takes days). Start these first; everything else waits on them.
-2. Phase 1: `eas init`, commit the project id.
-3. Phase 2: development builds and the on-device checklist. This is the first time widgets, Health, notifications, camera and keyboard run on a phone.
+1. Accounts still pending: Apple Developer ($99/year, a day or two to activate) and Google Play identity verification. Expo and Google Play are created.
+2. Phase 2 on Android: install the development build from the link above and run the on-device checklist. iOS needs the Apple account active plus one interactive `eas build --platform ios` on your own computer to create the certificates; after that EAS can build iOS from anywhere.
 4. Phase 3: store records, listings, privacy labels, health declarations, screenshots.
 5. Phase 4 and 5: production builds, TestFlight, Play internal testing, then Google's 14-day closed test with 12 testers (start recruiting them during Phase 2).
 6. Phase 6: release.
